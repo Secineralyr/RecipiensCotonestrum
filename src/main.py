@@ -29,6 +29,18 @@ DBPATH = envs['DBPATH']
 MISSKEY_HOST = envs['MISSKEY_HOST']
 MISSKEY_TOKEN = envs['MISSKEY_TOKEN']
 
+# for local-env test
+NO_SSL = False
+if 'NO_SSL' in envs:
+    if envs['NO_SSL'] == '1':
+        NO_SSL = True
+
+if NO_SSL:
+    HTTP_SCHEME = 'http'
+    WS_SCHEME = 'ws'
+else:
+    HTTP_SCHEME = 'https'
+    WS_SCHEME = 'wss'
 
 
 async def broadcast(msg, exclude=None):
@@ -46,7 +58,6 @@ def unregister(ws):
     del connections[ws]
 
 async def connect(ws, path):
-    print(1)
     register(ws)
     print('websocket connection opened')
     try:
@@ -57,7 +68,6 @@ async def connect(ws, path):
     finally:
         print('websocket connection closed')
         unregister(ws)
-
 
 
 def randid():
@@ -173,7 +183,7 @@ async def misskey_emoji_deleted(data):
 
 async def misskey_observe_emoji_change():
     while True:
-        uri = f'ws://{MISSKEY_HOST}/streaming?i={MISSKEY_TOKEN}'
+        uri = f'{WS_SCHEME}://{MISSKEY_HOST}/streaming?i={MISSKEY_TOKEN}'
         try:
             async with websockets.connect(uri) as ws:
                 while True:
