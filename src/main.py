@@ -125,7 +125,7 @@ async def misskey_emoji_updated(data):
 
         try:
             query = sqla.select(model.Emoji).where(model.Emoji.misskey_id == emoji_mid).limit(1)
-            emoji = (await db_session.execute(query)).one()
+            emoji = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
             return
 
