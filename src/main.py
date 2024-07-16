@@ -43,13 +43,11 @@ else:
     WS_SCHEME = 'wss'
 
 
+connections = {}
+
 async def broadcast(msg, exclude=None):
     conns = set(connections) - {exclude,}
     websockets.broadcast(conns, msg)
-
-
-
-connections = {}
 
 def register(ws):
     connections[ws] = {}
@@ -68,6 +66,8 @@ async def connect(ws, path):
     finally:
         print('websocket connection closed')
         unregister(ws)
+
+
 
 
 def randid():
@@ -91,17 +91,16 @@ async def misskey_emoji_added(data):
     emoji.created_at = now
     emoji.updated_at = now
 
-    uid = data_owner['id']
-    unm = data_owner['username']
+    umid = data_owner['id']
+    umnm = data_owner['username']
     
-    query = sqla.select(sqla.func.count()).select_from(model.User).where(model.User.misskey_id == uid)
-    cc = await db_session.scalar(query)
-    print(cc)
-    if cc == 0:
+    query = sqla.select(sqla.func.count()).select_from(model.User).where(model.User.misskey_id == umid)
+    if await db_session.scalar(query) == 0:
         user = model.User()
-        user.id = randid()
-        user.misskey_id = uid
-        user.username = unm
+        uid = randid()
+        user.id = uid
+        user.misskey_id = umid
+        user.username = umnm
 
         db_session.add(user)
         await db_session.commit()
