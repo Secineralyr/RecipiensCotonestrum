@@ -205,12 +205,43 @@ async def get_emoji_log(emoji_mid):
             data = await res.json()
     return data
 
+async def update_all_emojis():
+    uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/admin/emoji/list'
+
+    until = None
+    async with aiohttp.ClientSession() as session:
+        while True:
+            params = {'limit': 100, 'i': MISSKEY_TOKEN}
+            if until is not None:
+                params['untilId'] = until
+            async with session.post(uri, data=json.dumps(params)) as res:
+                data_emojis = await res.json()
+                if len(data_emojis) == 0: break
+
+                for data_emoji in data_emojis:
+                    await update_emoji(data_emoji)
+                
+                until = data_emojis[-1]['id']
+
+async def periodical_update_all_emojis(t):
+    while True:
+        asyncio.sleep(t)
+        await update_all_emojis()
 
 async def main():
+    await update_all_emojis()
+
     task_observe_emoji = asyncio.create_task(observe_emoji_change())
-    
-    async with websockets.serve(connect, HOST, PORT):
-        await asyncio.Future()  # run forever
+    task_update_all_emojis = asyncio.create_task(periodical_update_all_emojis(3600))
+
+    try:
+        async with websockets.serve(connect, HOST, PORT):
+            await asyncio.Future()  # run forever
+    except KeyboardInterrupt:
+        print('Exit server')
+
+    task_observe_emoji.cancel()
+    task_update_all_emojis.cancel()
 
 
 
@@ -224,7 +255,6 @@ if __name__ == '__main__':
     asyncio.run(db_init())
 
     db_session = sessionmaker(bind=db_engine, class_=AsyncSession, autoflush=True)()
-
 
     asyncio.run(main())
 
