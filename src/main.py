@@ -94,7 +94,7 @@ async def update_emoji(data_emoji):
     emoji.tags = ' '.join(data_emoji['aliases'])
     emoji.url = data_emoji['url']
     
-    elog = get_emoji_log(emoji_mid)
+    elog = await get_emoji_log(emoji_mid)
     if new:
         t = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
         if len(elog) > 0:
@@ -201,7 +201,7 @@ async def get_emoji_log(emoji_mid):
     uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/admin/emoji/get-emoji-log'
     async with aiohttp.ClientSession() as session:
         params = {'id': emoji_mid, 'i': MISSKEY_TOKEN}
-        async with session.post(uri, data=json.dumps(params)) as res:
+        async with session.post(uri, json=params) as res:
             data = await res.json()
     return data
 
@@ -214,7 +214,7 @@ async def update_all_emojis():
             params = {'limit': 100, 'i': MISSKEY_TOKEN}
             if until is not None:
                 params['untilId'] = until
-            async with session.post(uri, data=json.dumps(params)) as res:
+            async with session.post(uri, json=params) as res:
                 data_emojis = await res.json()
                 if len(data_emojis) == 0: break
 
