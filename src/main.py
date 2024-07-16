@@ -154,18 +154,18 @@ async def misskey_emoji_added(data):
     data_emoji = data['emoji']
     await update_emoji(data_emoji)
 
-async def misskey_emoji_updated(data):
+async def misskey_emojis_updated(data):
     data_emojis = data['emojis']
     for data_emoji in data_emojis:
         await update_emoji(data_emoji)
 
-async def misskey_emoji_deleted(data):
+async def misskey_emojis_deleted(data):
     data_emojis = data['emojis']
     for data_emoji in data_emojis:
         await delete_emoji(data_emoji)
 
 
-async def misskey_observe_emoji_change():
+async def observe_emoji_change():
     while True:
         uri = f'{WS_SCHEME}://{MISSKEY_HOST}/streaming?i={MISSKEY_TOKEN}'
         try:
@@ -179,9 +179,9 @@ async def misskey_observe_emoji_change():
                             case 'emojiAdded':
                                 await misskey_emoji_added(j['body'])
                             case 'emojiUpdated':
-                                await misskey_emoji_updated(j['body'])
+                                await misskey_emojis_updated(j['body'])
                             case 'emojiDeleted':
-                                await misskey_emoji_deleted(j['body'])
+                                await misskey_emojis_deleted(j['body'])
                     except Exception:
                         traceback.print_exc()
         except websockets.ConnectionClosed:
@@ -199,7 +199,7 @@ async def get_emoji_log(emoji_mid):
 
 
 async def main():
-    task_observe_emoji = asyncio.create_task(misskey_observe_emoji_change())
+    task_observe_emoji = asyncio.create_task(observe_emoji_change())
     
     async with websockets.serve(connect, HOST, PORT):
         await asyncio.Future()  # run forever
