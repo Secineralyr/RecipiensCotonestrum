@@ -139,15 +139,16 @@ async def misskey_emoji_updated(data):
         created_at = emoji.created_at
         emoji.updated_at = now
 
-        uid = data_owner['id']
-        unm = data_owner['username']
+        umid = data_owner['id']
+        umnm = data_owner['username']
         
-        query = sqla.select(sqla.func.count()).select_from(model.User).where(model.User.misskey_id == uid)
+        query = sqla.select(sqla.func.count()).select_from(model.User).where(model.User.misskey_id == umid)
         if await db_session.scalar(query) == 0:
             user = model.User()
-            user.id = randid()
-            user.misskey_id = uid
-            user.username = unm
+            uid = randid()
+            user.id = uid
+            user.misskey_id = umid
+            user.username = umnm
 
             db_session.add(user)
             await db_session.commit()
