@@ -1,4 +1,5 @@
 python-dotenv
 websockets
+aiohttp
 aiosqlite
 sqlalchemy[asyncio]

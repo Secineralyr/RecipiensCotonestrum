@@ -14,8 +14,8 @@ class IWSMessage(metaclass=abc.ABCMeta):
 class _EmojiData(IWSMessage):
 
     def __init__(self, eid, data, created_at, updated_at):
-        data_emoji = data['emoji']
-        data_owner = data['emoji']['user']
+        data_emoji = data
+        data_owner = data['user']
 
         self.id = eid
         self.misskey_id = data_emoji['id']
