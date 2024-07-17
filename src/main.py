@@ -89,6 +89,8 @@ async def update_emoji(data_emoji):
         emoji.misskey_id = emoji_mid
         new = True
 
+    emoji_id = emoji.id
+
     emoji.name = data_emoji['name']
     emoji.category = data_emoji['category']
     emoji.tags = ' '.join(data_emoji['aliases'])
@@ -105,7 +107,7 @@ async def update_emoji(data_emoji):
     else:
         t = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
         if len(elog) > 0:
-            for i in reversed(len(elog)):
+            for i in reversed(range(len(elog))):
                 if elog[i]['type'] == 'Update':
                     t = elog[i]['createDate']
                     break
@@ -114,6 +116,9 @@ async def update_emoji(data_emoji):
             return
         emoji.updated_at = t
     
+    created_at = emoji.created_at
+    updated_at = emoji.updated_at
+
     umid = data_owner['id']
     umnm = data_owner['username']
     
@@ -133,7 +138,7 @@ async def update_emoji(data_emoji):
     db_session.add(emoji)
     await db_session.commit()
 
-    msg = wsmsg.EmojiUpdated(emoji.id, data_emoji, emoji.created_at, emoji.updated_at).build()
+    msg = wsmsg.EmojiUpdated(emoji_id, data_emoji, created_at, updated_at).build()
     await broadcast(msg)
 
 async def delete_emoji(data_emoji):
@@ -225,7 +230,7 @@ async def update_all_emojis():
 
 async def periodical_update_all_emojis(t):
     while True:
-        asyncio.sleep(t)
+        await asyncio.sleep(t)
         await update_all_emojis()
 
 async def main():
