@@ -74,86 +74,86 @@ def randid():
 
 # add or update
 async def update_emoji(data_emoji):
-    data_owner = data_emoji['user']
+    async with db_sessionmaker() as db_session:
+        data_owner = data_emoji['user']
 
-    emoji_mid = data_emoji['id']
+        emoji_mid = data_emoji['id']
 
-    new = False
+        new = False
 
-    try:
-        query = sqla.select(model.Emoji).where(model.Emoji.misskey_id == emoji_mid).limit(1)
-        emoji = (await db_session.execute(query)).one()[0]
-    except sqla.exc.NoResultFound:
-        emoji = model.Emoji()
-        emoji.id = randid()
-        emoji.misskey_id = emoji_mid
-        new = True
+        try:
+            query = sqla.select(model.Emoji).where(model.Emoji.misskey_id == emoji_mid).limit(1)
+            emoji = (await db_session.execute(query)).one()[0]
+        except sqla.exc.NoResultFound:
+            emoji = model.Emoji()
+            emoji.id = randid()
+            emoji.misskey_id = emoji_mid
+            new = True
 
-    emoji_id = emoji.id
+        emoji_id = emoji.id
 
-    emoji.name = data_emoji['name']
-    emoji.category = data_emoji['category']
-    emoji.tags = ' '.join(data_emoji['aliases'])
-    emoji.url = data_emoji['url']
-    
-    elog = await get_emoji_log(emoji_mid)
-    if new:
-        t = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
-        if len(elog) > 0:
-            if elog[0]['type'] == 'Add':
-                t = elog[0]['createDate']
-        emoji.created_at = t
-        emoji.updated_at = t
-    else:
-        t = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
-        if len(elog) > 0:
-            for i in reversed(range(len(elog))):
-                if elog[i]['type'] == 'Update':
-                    t = elog[i]['createDate']
-                    break
-        if datetime.datetime.fromisoformat(emoji.updated_at) >= datetime.datetime.fromisoformat(t):
-            db_session.rollback()
-            return
-        emoji.updated_at = t
-    
-    created_at = emoji.created_at
-    updated_at = emoji.updated_at
+        emoji.name = data_emoji['name']
+        emoji.category = data_emoji['category']
+        emoji.tags = ' '.join(data_emoji['aliases'])
+        emoji.url = data_emoji['url']
+        
+        elog = await get_emoji_log(emoji_mid)
+        if new:
+            t = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
+            if len(elog) > 0:
+                if elog[0]['type'] == 'Add':
+                    t = elog[0]['createDate']
+            emoji.created_at = t
+            emoji.updated_at = t
+        else:
+            t = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
+            if len(elog) > 0:
+                for i in reversed(range(len(elog))):
+                    if elog[i]['type'] == 'Update':
+                        t = elog[i]['createDate']
+                        break
+            if datetime.datetime.fromisoformat(emoji.updated_at) >= datetime.datetime.fromisoformat(t):
+                return
+            emoji.updated_at = t
+        
+        created_at = emoji.created_at
+        updated_at = emoji.updated_at
 
-    umid = data_owner['id']
-    umnm = data_owner['username']
-    
-    query = sqla.select(sqla.func.count()).select_from(model.User).where(model.User.misskey_id == umid)
-    if await db_session.scalar(query) == 0:
-        user = model.User()
-        uid = randid()
-        user.id = uid
-        user.misskey_id = umid
-        user.username = umnm
+        umid = data_owner['id']
+        umnm = data_owner['username']
+        
+        query = sqla.select(sqla.func.count()).select_from(model.User).where(model.User.misskey_id == umid)
+        if await db_session.scalar(query) == 0:
+            user = model.User()
+            uid = randid()
+            user.id = uid
+            user.misskey_id = umid
+            user.username = umnm
 
-        db_session.add(user)
+            db_session.add(user)
+            await db_session.commit()
+
+        emoji.user_id = uid
+
+        db_session.add(emoji)
         await db_session.commit()
-
-    emoji.user_id = uid
-
-    db_session.add(emoji)
-    await db_session.commit()
 
     msg = wsmsg.EmojiUpdated(emoji_id, data_emoji, created_at, updated_at).build()
     await broadcast(msg)
 
 async def delete_emoji(data_emoji):
-    emoji_mid = data_emoji['id']
+    async with db_sessionmaker() as db_session:
+        emoji_mid = data_emoji['id']
 
-    try:
-        query = sqla.select(model.Emoji).where(model.Emoji.misskey_id == emoji_mid).limit(1)
-        emoji = (await db_session.execute(query)).one()[0]
-    except sqla.exc.NoResultFound:
-        return
+        try:
+            query = sqla.select(model.Emoji).where(model.Emoji.misskey_id == emoji_mid).limit(1)
+            emoji = (await db_session.execute(query)).one()[0]
+        except sqla.exc.NoResultFound:
+            return
 
-    emoji_id = emoji.id
+        emoji_id = emoji.id
     
     msg = wsmsg.EmojiDeleted(emoji_id).build()
-
     await broadcast(msg)
 
 
@@ -259,7 +259,7 @@ if __name__ == '__main__':
             await conn.run_sync(model.Base.metadata.create_all)
     asyncio.run(db_init())
 
-    db_session = sessionmaker(bind=db_engine, class_=AsyncSession, autoflush=True)()
+    db_sessionmaker = sessionmaker(bind=db_engine, class_=AsyncSession, autoflush=True)
 
     asyncio.run(main())
 
