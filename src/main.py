@@ -122,8 +122,11 @@ async def update_emoji(data_emoji):
         umid = data_owner['id']
         umnm = data_owner['username']
         
-        query = sqla.select(sqla.func.count()).select_from(model.User).where(model.User.misskey_id == umid)
-        if await db_session.scalar(query) == 0:
+        try:
+            query = sqla.select(model.User).where(model.User.misskey_id == umid)
+            user = (await db_session.execute(query)).one()[0]
+            uid = user.id
+        except sqla.exc.NoResultFound:
             user = model.User()
             uid = randid()
             user.id = uid
