@@ -41,6 +41,10 @@ else:
     WS_SCHEME = 'wss'
 
 
+# ==================================================
+#                   Tool <-> Server                 
+# ==================================================
+
 connections = {}
 
 async def broadcast(msg, exclude=None):
@@ -89,6 +93,11 @@ async def send_alldata(ws):
 
                 msg = wsmsg.EmojiUpdated(eid, None, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, owner_mid=user_id, owner_name=user_name).build()
                 await ws.send(msg)
+
+
+# ==================================================
+#                   Data processing                 
+# ==================================================
 
 
 def randid():
@@ -183,12 +192,6 @@ async def delete_emoji(data_emoji):
     await broadcast(msg)
 
 
-
-
-
-
-
-
 async def misskey_emoji_added(data):
     data_emoji = data['emoji']
     await update_emoji(data_emoji)
@@ -202,6 +205,11 @@ async def misskey_emojis_deleted(data):
     data_emojis = data['emojis']
     for data_emoji in data_emojis:
         await delete_emoji(data_emoji)
+
+
+# ==================================================
+#                 Server <-> Misskey                
+# ==================================================
 
 
 async def observe_emoji_change():
@@ -258,6 +266,11 @@ async def periodical_update_all_emojis(t):
     while True:
         await asyncio.sleep(t)
         await update_all_emojis()
+
+
+# ==================================================
+#                        Main                       
+# ==================================================
 
 async def main():
     await update_all_emojis()
