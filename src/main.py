@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from env import envs
 import model
 import wsmsg
+import permission as perm
 
 
 HOST = envs['HOST']
@@ -52,16 +53,17 @@ async def broadcast(msg, exclude=None):
     websockets.broadcast(conns, msg)
 
 def register(ws):
-    connections[ws] = {}
+    task_recv = asyncio.create_task(reception(ws))
+    connections[ws] = {'task_recv': task_recv, 'level': perm.Permission.USER}
 
 def unregister(ws):
+    connections[ws]['task_recv'].cancel()
     del connections[ws]
 
 async def connect(ws, path):
     register(ws)
     print('websocket connection opened')
     try:
-        asyncio.create_task(send_alldata(ws))
         await ws.wait_closed()
     except Exception:
         traceback.print_exc()
@@ -70,7 +72,7 @@ async def connect(ws, path):
         print('websocket connection closed')
         unregister(ws)
 
-
+@perm.require(perm.Permission.EMOJI_MODERATOR)
 async def send_alldata(ws):
     async with db_sessionmaker() as db_session:
         query = sqla.select(model.Emoji, model.User).outerjoin(model.User, model.Emoji.user_id == model.User.id)
@@ -93,6 +95,20 @@ async def send_alldata(ws):
 
                 msg = wsmsg.EmojiUpdated(eid, None, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, owner_mid=user_id, owner_name=user_name).build()
                 await ws.send(msg)
+
+async def reception(ws):
+    while True:
+        try:
+            data = await ws.recv()
+            match data['op']:
+                case 'auth':
+                    level = await authenticate(data['body'])
+                    connections[ws]['level'] = level
+                case 'fetch_all':
+                    await send_alldata(ws)
+        except websockets.ConnectionClosed:
+            break
+
 
 
 # ==================================================
@@ -211,6 +227,23 @@ async def misskey_emojis_deleted(data):
 #                 Server <-> Misskey                
 # ==================================================
 
+async def authenticate(data):
+    token = data['token']
+    uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/i'
+    async with aiohttp.ClientSession() as session:
+        params = {'i': token}
+        async with session.post(uri, json=params) as res:
+            data = await res.json()
+    if data['isAdmin']:
+        level = perm.Permission.ADMINISTRATOR
+    elif data['isModerator']:
+        level = perm.Permission.MODERATOR
+    elif data['isEmojiModerator']:
+        level = perm.Permission.EMOJI_MODERATOR
+    else:
+        level = perm.Permission.USER
+    return level
+
 
 async def observe_emoji_change():
     while True:
@@ -286,7 +319,8 @@ async def main():
 
     task_observe_emoji.cancel()
     task_update_all_emojis.cancel()
-
+    for connection in connections:
+        connection['task_recv'].cancel()
 
 
 if __name__ == '__main__':

@@ -2,6 +2,8 @@ import abc
 
 import json
 
+import permission
+
 class IWSMessage(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
@@ -87,5 +89,26 @@ class EmojiDeleted(IWSMessage):
                 'op': 'emoji_delete',
                 'body': {
                     'id': self.id
+                }
+            }
+
+class Denied(IWSMessage):
+    def __init__(self, required_level):
+        match required_level:
+            case 1:
+                self.msg = "You must have at least 'Emoji Moderator' permission."
+            case 2:
+                self.msg = "You must have at least 'Moderator' permission."
+            case 3:
+                self.msg = "You must have at least 'Administrator' permission."
+            case _:
+                self.msg = "Unknown error. This is server-side bug. Please report."
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'denied',
+                'body': {
+                    'message': self.msg
                 }
             }
