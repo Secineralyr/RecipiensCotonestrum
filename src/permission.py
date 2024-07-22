@@ -1,4 +1,5 @@
 from enum import IntEnum
+from functools import wraps
 
 import wsmsg
 
@@ -10,6 +11,7 @@ class Permission(IntEnum):
 
 def require(level: Permission):
     def _require(func):
+        @wraps(func)
         async def wrapper(*args, **kwargs):
             ws = args[0]
             if ws['level'] >= level:
