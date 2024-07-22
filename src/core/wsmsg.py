@@ -2,7 +2,7 @@ import abc
 
 import json
 
-import permission
+from core import permission as perm
 
 class IWSMessage(metaclass=abc.ABCMeta):
 
@@ -93,13 +93,14 @@ class EmojiDeleted(IWSMessage):
             }
 
 class Denied(IWSMessage):
-    def __init__(self, required_level):
+    def __init__(self, op, required_level):
+        self.op = op
         match required_level:
-            case 1:
+            case perm.Permission.EMOJI_MODERATOR:
                 self.msg = "You must have at least 'Emoji Moderator' permission."
-            case 2:
+            case perm.Permission.MODERATOR:
                 self.msg = "You must have at least 'Moderator' permission."
-            case 3:
+            case perm.Permission.ADMINISTRATOR:
                 self.msg = "You must have at least 'Administrator' permission."
             case _:
                 self.msg = "Unknown error. This is server-side bug. Please report."
@@ -109,6 +110,22 @@ class Denied(IWSMessage):
             {
                 'op': 'denied',
                 'body': {
+                    'op': self.op,
                     'message': self.msg
+                }
+            }
+
+class MisskeyError(IWSMessage):
+    def __init__(self, op, error):
+        self.op = op
+        self.error = error
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'misskey_error',
+                'body': {
+                    'op': self.op,
+                    'message': self.error
                 }
             }

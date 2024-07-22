@@ -1,13 +1,15 @@
 from enum import IntEnum
 from functools import wraps
 
-import wsmsg
+from core import wsmsg
+
 
 class Permission(IntEnum):
     USER = 0
     EMOJI_MODERATOR = 1
     MODERATOR = 2
     ADMINISTRATOR = 3
+
 
 def require(level: Permission):
     def _require(func):
@@ -21,6 +23,7 @@ def require(level: Permission):
         return wrapper
     return _require
 
-async def send_denied(ws, req_level):
-    msg = wsmsg.Denied(req_level).build()
+
+async def send_denied(ws, op, req_level):
+    msg = wsmsg.Denied(op, req_level).build()
     await ws.send(msg)
