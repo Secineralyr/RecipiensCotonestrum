@@ -99,7 +99,7 @@ async def send_alldata(ws):
 async def reception(ws):
     while True:
         try:
-            data = await ws.recv()
+            data = json.loads(await ws.recv())
             match data['op']:
                 case 'auth':
                     level = await authenticate(data['body'])
