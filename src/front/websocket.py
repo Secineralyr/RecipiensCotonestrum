@@ -6,6 +6,7 @@ import asyncio
 import websockets
 
 from core import permission as perm
+from core import error
 
 from front import receptor
 
@@ -47,6 +48,6 @@ async def reception(ws):
             if op in receptors:
                 await receptors[op](ws, body)
             else:
-                pass
+                await error.send_no_such_operation(ws, op)
         except websockets.ConnectionClosed:
             break

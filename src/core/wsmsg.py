@@ -93,7 +93,7 @@ class EmojiDeleted(IWSMessage):
             }
 
 class Denied(IWSMessage):
-    def __init__(self, op, required_level):
+    def __init__(self, op: str, required_level: perm.Permission):
         self.op = op
         match required_level:
             case perm.Permission.EMOJI_MODERATOR:
@@ -115,15 +115,47 @@ class Denied(IWSMessage):
                 }
             }
 
-class MisskeyError(IWSMessage):
-    def __init__(self, op, error):
+class MisskeyAPIError(IWSMessage):
+    def __init__(self, op: str, mi_message: dict, error: str = ''):
+        self.op = op
+        self.error = error
+        self.mi_message = mi_message
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'misskey_api_error',
+                'body': {
+                    'op': self.op,
+                    'mi_message': self.mi_message,
+                    'message': self.error
+                }
+            }
+
+class MisskeyUnknownError(IWSMessage):
+    def __init__(self, op: str, error: str):
         self.op = op
         self.error = error
     
     def _build_json(self) -> dict:
         return \
             {
-                'op': 'misskey_error',
+                'op': 'misskey_unknown_error',
+                'body': {
+                    'op': self.op,
+                    'message': self.error
+                }
+            }
+
+class Error(IWSMessage):
+    def __init__(self, op: str, error: str):
+        self.op = op
+        self.error = error
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'error',
                 'body': {
                     'op': self.op,
                     'message': self.error

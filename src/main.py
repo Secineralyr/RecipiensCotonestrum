@@ -1,9 +1,11 @@
-import os
+import traceback
 
 import asyncio
 import websockets
 
 from env import envs
+from core import exc
+from core import wsmsg
 
 from front import websocket
 from misskey import miapi, miws
@@ -16,7 +18,18 @@ PORT = int(envs['PORT'])
 async def periodical_update_all_emojis(t):
     while True:
         await asyncio.sleep(t)
-        await miapi.update_all_emojis()
+        try:
+            await miapi.update_all_emojis()
+        except exc.MiAPIErrorException as ex:
+            traceback.print_exc()
+            msg = wsmsg.MisskeyAPIError('internal', ex.err, f'periodical_update_all_emojis').build()
+            await websocket.broadcast(msg)
+        except exc.MiUnknownErrorException:
+            traceback.print_exc('internal', f'periodical_update_all_emojis')
+            msg = wsmsg.MisskeyUnknownError().build()
+            await websocket.broadcast(msg)
+        except Exception:
+            traceback.print_exc()
 
 
 async def main():

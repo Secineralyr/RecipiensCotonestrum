@@ -2,8 +2,12 @@ import aiohttp
 
 from env import envs
 
+from json.decoder import JSONDecodeError
+from aiohttp.client_exceptions import ContentTypeError
+
 from core import permission as perm
 from core import procemoji
+from core import exc
 
 MISSKEY_HOST = envs['MISSKEY_HOST']
 MISSKEY_TOKEN = envs['MISSKEY_TOKEN']
@@ -28,7 +32,12 @@ async def authenticate(data):
     async with aiohttp.ClientSession() as session:
         params = {'i': token}
         async with session.post(uri, json=params) as res:
-            data = await res.json()
+            try:
+                data = await res.json()
+                if 'message' in data:
+                    raise exc.MiAPIErrorException(data)
+            except (ContentTypeError, JSONDecodeError):
+                raise exc.MiUnknownErrorException()
     if data['isAdmin']:
         level = perm.Permission.ADMINISTRATOR
     elif data['isModerator']:
@@ -44,7 +53,12 @@ async def get_emoji_log(emoji_mid):
     async with aiohttp.ClientSession() as session:
         params = {'id': emoji_mid, 'i': MISSKEY_TOKEN}
         async with session.post(uri, json=params) as res:
-            data = await res.json()
+            try:
+                data = await res.json()
+                if 'message' in data:
+                    raise exc.MiAPIErrorException(data)
+            except (ContentTypeError, JSONDecodeError):
+                raise exc.MiUnknownErrorException()
     return data
 
 async def update_all_emojis():
@@ -57,7 +71,13 @@ async def update_all_emojis():
             if until is not None:
                 params['untilId'] = until
             async with session.post(uri, json=params) as res:
-                data_emojis = await res.json()
+                try:
+                    data_emojis = await res.json()
+                    if 'message' in data_emojis:
+                        raise exc.MiAPIErrorException(data_emojis)
+                except (ContentTypeError, JSONDecodeError):
+                    raise exc.MiUnknownErrorException()
+                
                 if len(data_emojis) == 0: break
 
                 for data_emoji in data_emojis:

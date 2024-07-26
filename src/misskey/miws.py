@@ -7,6 +7,10 @@ import websockets
 from env import envs
 
 from core import procemoji
+from core import wsmsg
+from core import exc
+
+from front import websocket
 
 
 MISSKEY_HOST = envs['MISSKEY_HOST']
@@ -43,6 +47,14 @@ async def observe_emoji_change():
                                 await procemoji.misskey_emojis_updated(j['body'])
                             case 'emojiDeleted':
                                 await procemoji.misskey_emojis_deleted(j['body'])
+                    except exc.MiAPIErrorException as ex:
+                        traceback.print_exc()
+                        msg = wsmsg.MisskeyAPIError('internal', ex.err, f'observe_emoji_change type: {j["type"]}').build()
+                        await websocket.broadcast(msg)
+                    except exc.MiUnknownErrorException:
+                        traceback.print_exc('internal', f'observe_emoji_change type: {j["type"]}')
+                        msg = wsmsg.MisskeyUnknownError().build()
+                        await websocket.broadcast(msg)
                     except Exception:
                         traceback.print_exc()
         except websockets.ConnectionClosed:
