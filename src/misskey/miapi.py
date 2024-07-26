@@ -65,6 +65,7 @@ async def update_all_emojis():
     uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/admin/emoji/list'
 
     until = None
+    exists = []
     async with aiohttp.ClientSession() as session:
         while True:
             params = {'limit': 100, 'i': MISSKEY_TOKEN}
@@ -82,6 +83,9 @@ async def update_all_emojis():
 
                 for data_emoji in data_emojis:
                     await procemoji.update_emoji(data_emoji)
+                    exists.append(data_emoji['id'])
                 
                 until = data_emojis[-1]['id']
+    
+    await procemoji.plune_emoji(exists)
 
