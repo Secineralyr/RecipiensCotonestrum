@@ -26,8 +26,8 @@ else:
     WS_SCHEME = 'wss'
 
 
-async def authenticate(data):
-    token = data['token']
+async def authenticate(body):
+    token = body['token']
     uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/i'
     async with aiohttp.ClientSession() as session:
         params = {'i': token}

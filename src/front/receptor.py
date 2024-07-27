@@ -7,6 +7,7 @@ from core import permission as perm
 from core.db import database, model
 
 from front import websocket
+from misskey import miapi
 
 
 db_sessionmaker = database.db_sessionmaker
@@ -51,5 +52,5 @@ async def send_alldata(ws, body):
 
 @receptor('auth', perm.Permission.USER)
 async def authenticate(ws, body):
-    level = await authenticate(body)
+    level = await miapi.authenticate(body)
     websocket.connections[ws]['level'] = level
