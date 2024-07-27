@@ -47,7 +47,7 @@ async def send_alldata(ws, body):
                 user_id = user.misskey_id
                 user_name = user.username
 
-                msg = wsmsg.EmojiUpdated(eid, None, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, owner_mid=user_id, owner_name=user_name).build()
+                msg = wsmsg.EmojiUpdate(eid, None, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, owner_mid=user_id, owner_name=user_name).build()
                 await ws.send(msg)
 
 @receptor('auth', perm.Permission.USER)

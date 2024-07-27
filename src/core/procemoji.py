@@ -78,7 +78,7 @@ async def update_emoji(data_emoji):
         db_session.add(emoji)
         await db_session.commit()
 
-    msg = wsmsg.EmojiUpdated(emoji_id, data_emoji, created_at, updated_at).build()
+    msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, created_at, updated_at).build()
     await websocket.broadcast(msg)
 
 async def delete_emoji(data_emoji):
@@ -95,7 +95,7 @@ async def delete_emoji(data_emoji):
 
         emoji_id = emoji.id
     
-    msg = wsmsg.EmojiDeleted(emoji_id).build()
+    msg = wsmsg.EmojiDelete(emoji_id).build()
     await websocket.broadcast(msg)
 
 async def plune_emoji(exsits_mids):

@@ -68,7 +68,7 @@ class _EmojiData(IWSMessage):
             }
 
 
-class EmojiUpdated(IWSMessage):
+class EmojiUpdate(IWSMessage):
     def __init__(self, eid, data, created_at, updated_at, misskey_id=None, name=None, category=None, tags=None, url=None, owner_mid=None, owner_name=None):
         self.emoji = _EmojiData(eid, data, created_at, updated_at, misskey_id, name, category, tags, url, owner_mid, owner_name)
     
@@ -79,7 +79,7 @@ class EmojiUpdated(IWSMessage):
                 'body': self.emoji._build_json()
             }
 
-class EmojiDeleted(IWSMessage):
+class EmojiDelete(IWSMessage):
     def __init__(self, eid):
         self.id = eid
     
