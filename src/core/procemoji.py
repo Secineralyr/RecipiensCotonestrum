@@ -90,6 +90,8 @@ async def delete_emoji(data_emoji):
             emoji = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
             return
+        
+        db_session.delete(emoji)
 
         emoji_id = emoji.id
     
