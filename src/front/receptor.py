@@ -16,9 +16,13 @@ receptors = {}
 
 def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
     def _receptor(func):
+        g = func.__globals__
+        g['_op'] = op
+
         @perm.require(req_level)
         @wraps(func)
         async def wrapper(*args, **kwargs):
+            _op = op
             await func(*args, **kwargs)
         
         receptors[op] = wrapper
