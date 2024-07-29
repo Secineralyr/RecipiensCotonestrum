@@ -12,8 +12,6 @@ from front import websocket
 from misskey import miapi
 
 
-db_sessionmaker = database.db_sessionmaker
-
 receptors = {}
 
 def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
@@ -34,7 +32,7 @@ def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
 
 @receptor('fetch_all', perm.Permission.EMOJI_MODERATOR)
 async def send_alldata(ws, body):
-    async with db_sessionmaker() as db_session:
+    async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Emoji, model.User).outerjoin(model.User, model.Emoji.user_id == model.User.id)
         results = await db_session.stream(query)
         async for part in results.partitions(10):
@@ -59,7 +57,7 @@ async def send_alldata(ws, body):
 @receptor('auth', perm.Permission.USER)
 async def authenticate(ws, body):
     try:
-        level = await miapi.authenticate(body)
+        level = await miapi.authenticate(body['token'])
     except exc.MiAPIErrorException as ex:
         traceback.print_exc()
         msg = wsmsg.MisskeyAPIError(globals()['_op'], ex.err).build()
