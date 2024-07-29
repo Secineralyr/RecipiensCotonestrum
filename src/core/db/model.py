@@ -13,10 +13,12 @@ class Emoji(Base):
     tags = Column(Text)
     user_id = Column(Text, ForeignKey('users.id'))
     url = Column(Text)
+    risk_id = Column(Text, ForeignKey('risks.id'))
     created_at = Column(Text)
     updated_at = Column(Text)
 
     users = relationship('User')
+    risks = relationship('Risk')
 
 class User(Base):
     __tablename__ = 'users'
@@ -29,10 +31,10 @@ class Risk(Base):
     __tablename__ = 'risks'
 
     id = Column(Text, primary_key=True)
-    emoji_misskey_id = Column(Text)
+    is_checked = Column(Integer, CheckConstraint('is_checked == 0 OR is_checked == 1'))
     level = Column(Integer, CheckConstraint('level >= 0 AND level <= 3'))
     reason_genre = Column(Text, ForeignKey('reasons.id'))
-    remarks = Column(Text)
+    remark = Column(Text)
     created_at = Column(Text)
     updated_at = Column(Text)
 

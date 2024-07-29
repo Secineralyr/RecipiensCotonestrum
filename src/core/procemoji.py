@@ -4,10 +4,12 @@ import sqlalchemy as sqla
 
 from core import util
 from core import wsmsg
+from core import procrisk
 from core.db import database, model
 
 from front import websocket
 from misskey import miapi
+
 
 # add or update
 async def update_emoji(data_emoji):
@@ -60,7 +62,7 @@ async def update_emoji(data_emoji):
         umnm = data_owner['username']
         
         try:
-            query = sqla.select(model.User).where(model.User.misskey_id == umid)
+            query = sqla.select(model.User).where(model.User.misskey_id == umid).limit(1)
             user = (await db_session.execute(query)).one()[0]
             uid = user.id
         except sqla.exc.NoResultFound:
@@ -71,12 +73,23 @@ async def update_emoji(data_emoji):
             user.username = umnm
 
             db_session.add(user)
-            await db_session.commit()
 
         emoji.user_id = uid
 
+        if new:
+            rid = procrisk.create_risk()
+            emoji.risk_id = rid
+        else:
+            rid = emoji.risk_id
+            try:
+                query = sqla.select(model.Risk).where(model.Risk.id == rid).limit(1)
+                risk = (await db_session.execute(query)).one()[0]
+                risk.is_checked = 0
+            except sqla.exc.NoResultFound:
+                rid = procrisk.create_risk()
+                emoji.risk_id = rid
+
         db_session.add(emoji)
-        await db_session.commit()
 
     msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, created_at, updated_at).build()
     await websocket.broadcast(msg)

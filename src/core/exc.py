@@ -1,5 +1,11 @@
 import json
 
+
+class NoSuchRiskException(Exception):
+    def __init__(self):
+        super.__init__()
+
+
 class MiAPIErrorException(Exception):
     def __init__(self, err: dict):
         super.__init__()

@@ -6,6 +6,8 @@ import sqlalchemy as sqla
 from core import wsmsg
 from core import permission as perm
 from core import exc
+from core import error
+from core import procrisk
 from core.db import database, model
 
 from front import websocket
@@ -68,3 +70,12 @@ async def authenticate(ws, body):
         await websocket.broadcast(msg)
     else:
         websocket.connections[ws]['level'] = level
+
+@receptor('set_risk_prop', perm.Permission.EMOJI_MODERATOR)
+async def set_risk_prop(ws, body):
+    rid = body['id']
+    props = body['props']
+    try:
+        procrisk.set_risk(rid, props)
+    except exc.NoSuchRiskException:
+        error.send_no_such_risk(ws, globals()['_op'], rid)

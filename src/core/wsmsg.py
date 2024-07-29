@@ -67,6 +67,28 @@ class _EmojiData(IWSMessage):
                 'updated_at': self.updated_at
             }
 
+class _RiskData(IWSMessage):
+
+    def __init__(self, rid, checked, level, reason_genre, remark, created_at, updated_at):
+        self.id = rid
+        self.checked = checked
+        self.level = level
+        self.reason_genre = reason_genre
+        self.remark = remark
+        self.created_at = created_at
+        self.updated_at = updated_at
+
+    def _build_json(self) -> dict:
+        return \
+            {
+                'id': self.id,
+                'checked': self.checked,
+                'level': self.level,
+                'reason_genre': self.reason_genre,
+                'remark': self.remark,
+                'created_at': self.created_at,
+                'updated_at': self.updated_at
+            }
 
 class EmojiUpdate(IWSMessage):
     def __init__(self, eid, data, created_at, updated_at, misskey_id=None, name=None, category=None, tags=None, url=None, owner_mid=None, owner_name=None):
@@ -90,6 +112,17 @@ class EmojiDelete(IWSMessage):
                 'body': {
                     'id': self.id
                 }
+            }
+
+class RiskUpdated(IWSMessage):
+    def __init__(self, rid, checked, level, reason_genre, remark, created_at, updated_at):
+        self.risk = _RiskData(rid, checked, level, reason_genre, remark, created_at, updated_at)
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'risk_update',
+                'body': self.risk._build_json()
             }
 
 class Denied(IWSMessage):
@@ -156,6 +189,21 @@ class Error(IWSMessage):
         return \
             {
                 'op': 'error',
+                'body': {
+                    'op': self.op,
+                    'message': self.error
+                }
+            }
+
+class InternalError(IWSMessage):
+    def __init__(self, op: str, error: str):
+        self.op = op
+        self.error = error
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'internal_error',
                 'body': {
                     'op': self.op,
                     'message': self.error
