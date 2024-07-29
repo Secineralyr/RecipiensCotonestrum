@@ -1,9 +1,11 @@
 from functools import wraps
+import traceback
 
 import sqlalchemy as sqla
 
 from core import wsmsg
 from core import permission as perm
+from core import exc
 from core.db import database, model
 
 from front import websocket
@@ -56,5 +58,15 @@ async def send_alldata(ws, body):
 
 @receptor('auth', perm.Permission.USER)
 async def authenticate(ws, body):
-    level = await miapi.authenticate(body)
-    websocket.connections[ws]['level'] = level
+    try:
+        level = await miapi.authenticate(body)
+    except exc.MiAPIErrorException as ex:
+        traceback.print_exc()
+        msg = wsmsg.MisskeyAPIError(globals()['_op'], ex.err).build()
+        await websocket.broadcast(msg)
+    except exc.MiUnknownErrorException:
+        traceback.print_exc()
+        msg = wsmsg.MisskeyUnknownError(globals()['_op'], '').build()
+        await websocket.broadcast(msg)
+    else:
+        websocket.connections[ws]['level'] = level
