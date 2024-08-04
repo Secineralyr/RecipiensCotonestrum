@@ -32,6 +32,33 @@ def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
     return _receptor
 
 
+@receptor('fetch', perm.Permission.EMOJI_MODERATOR)
+async def send_data(ws, body):
+    eid = body['id']
+    async with database.db_sessionmaker() as db_session:
+        query = sqla.select(model.Emoji, model.User).outerjoin(model.User, model.Emoji.user_id == model.User.id).where(model.Emoji.id == eid).limit(1)
+        try:
+            emoji, user = (await db_session.execute(query)).one()
+        except sqla.exc.NoResultFound:
+            error.send_no_such_emoji(ws, globals()['_op'], eid)
+        else:
+            eid = emoji.id
+            misskey_id = emoji.misskey_id
+            name = emoji.name
+            category = emoji.category
+            tags = emoji.tags
+            url = emoji.url
+            is_self_made = emoji.is_self_made
+            license = emoji.license
+            created_at = emoji.created_at
+            updated_at = emoji.updated_at
+
+            user_id = user.misskey_id
+            user_name = user.username
+
+            msg = wsmsg.EmojiUpdate(eid, None, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license, owner_mid=user_id, owner_name=user_name).build()
+            await ws.send(msg)
+
 @receptor('fetch_all', perm.Permission.EMOJI_MODERATOR)
 async def send_alldata(ws, body):
     async with database.db_sessionmaker() as db_session:
