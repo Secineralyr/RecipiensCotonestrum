@@ -47,13 +47,15 @@ async def send_alldata(ws, body):
                 category = emoji.category
                 tags = emoji.tags
                 url = emoji.url
+                is_self_made = emoji.is_self_made
+                license = emoji.license
                 created_at = emoji.created_at
                 updated_at = emoji.updated_at
 
                 user_id = user.misskey_id
                 user_name = user.username
 
-                msg = wsmsg.EmojiUpdate(eid, None, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, owner_mid=user_id, owner_name=user_name).build()
+                msg = wsmsg.EmojiUpdate(eid, None, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license, owner_mid=user_id, owner_name=user_name).build()
                 await ws.send(msg)
 
 @receptor('auth', perm.Permission.USER)

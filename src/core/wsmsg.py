@@ -15,7 +15,7 @@ class IWSMessage(metaclass=abc.ABCMeta):
 
 class _EmojiData(IWSMessage):
 
-    def __init__(self, eid, data, created_at, updated_at, misskey_id=None, name=None, category=None, tags=None, url=None, owner_mid=None, owner_name=None):
+    def __init__(self, eid, data, created_at, updated_at, misskey_id=None, name=None, category=None, tags=None, url=None, is_self_made=None, license=None, owner_mid=None, owner_name=None):
         if data is not None:
             data_emoji = data
             data_owner = data['user']
@@ -25,6 +25,8 @@ class _EmojiData(IWSMessage):
             self.category = data_emoji['category']
             self.tags = data_emoji['aliases']
             self.url = data_emoji['url']
+            self.is_self_made = data_emoji['isSelfMadeResource']
+            self.license = data_emoji['license']
 
             self.owner_mid = data_owner['id']
             self.owner_name = data_owner['username']
@@ -34,6 +36,8 @@ class _EmojiData(IWSMessage):
             self.category = None
             self.tags = None
             self.url = None
+            self.is_self_made = None
+            self.license = None
 
             self.owner_mid = None
             self.owner_name = None
@@ -43,6 +47,8 @@ class _EmojiData(IWSMessage):
         if category is not None: self.category = category
         if tags is not None: self.tags = tags
         if url is not None: self.url = url
+        if is_self_made is not None: self.is_self_made = is_self_made
+        if license is not None: self.license = license
         if owner_mid is not None: self.owner_mid = owner_mid
         if owner_name is not None: self.owner_name = owner_name
 
@@ -59,6 +65,8 @@ class _EmojiData(IWSMessage):
                 'category': self.category,
                 'tags': self.tags,
                 'url': self.url,
+                'is_self_made': self.is_self_made,
+                'license': self.license,
                 'owner': {
                     'id': self.owner_mid,
                     'name': self.owner_name
@@ -91,8 +99,8 @@ class _RiskData(IWSMessage):
             }
 
 class EmojiUpdate(IWSMessage):
-    def __init__(self, eid, data, created_at, updated_at, misskey_id=None, name=None, category=None, tags=None, url=None, owner_mid=None, owner_name=None):
-        self.emoji = _EmojiData(eid, data, created_at, updated_at, misskey_id, name, category, tags, url, owner_mid, owner_name)
+    def __init__(self, eid, data, created_at, updated_at, misskey_id=None, name=None, category=None, tags=None, url=None, is_self_made=None, license=None, owner_mid=None, owner_name=None):
+        self.emoji = _EmojiData(eid, data, created_at, updated_at, misskey_id, name, category, tags, url, is_self_made, license, owner_mid, owner_name)
     
     def _build_json(self) -> dict:
         return \

@@ -34,6 +34,10 @@ async def update_emoji(data_emoji):
         emoji.name = data_emoji['name']
         emoji.category = data_emoji['category']
         emoji.tags = ' '.join(data_emoji['aliases'])
+
+        emoji.is_self_made = data_emoji['isSelfMadeResource']
+        emoji.license = data_emoji['license']
+
         emoji.url = data_emoji['url']
         
         elog = await miapi.get_emoji_log(emoji_mid)
