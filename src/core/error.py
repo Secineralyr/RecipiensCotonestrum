@@ -7,10 +7,6 @@ async def send_internal_error(ws, op, msg):
 
 
 async def send_no_such_operation(ws, op):
-    msg = wsmsg.Error(op, 'No such operation.').build()
-    await ws.send(msg)
-
-async def send_no_such_operation(ws, op):
     msg = wsmsg.Error('internal', f'No such operation. (Name: {op})').build()
     await ws.send(msg)
 
