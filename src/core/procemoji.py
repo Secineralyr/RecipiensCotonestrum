@@ -81,7 +81,7 @@ async def update_emoji(data_emoji):
         emoji.user_id = uid
 
         if new:
-            rid = procrisk.create_risk()
+            rid = await procrisk.create_risk()
             emoji.risk_id = rid
         else:
             rid = emoji.risk_id
