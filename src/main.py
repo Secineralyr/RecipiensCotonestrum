@@ -6,6 +6,7 @@ import websockets
 from env import envs
 from core import exc
 from core import wsmsg
+from core.db import database
 
 from front import websocket
 from misskey import miapi, miws
@@ -49,6 +50,8 @@ async def main():
 
 
 if __name__ == '__main__':
+    database.init()
+
     asyncio.run(main())
 
 

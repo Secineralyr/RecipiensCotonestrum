@@ -11,13 +11,17 @@ from core.db import model
 
 DBPATH = envs['DBPATH']
 
+db_engine = None
+db_sessionmaker = None
 
-db_engine = create_async_engine(f'sqlite+aiosqlite:///{DBPATH}', echo=True)
+def init():
+    global db_engine, db_sessionmaker
+    db_engine = create_async_engine(f'sqlite+aiosqlite:///{DBPATH}', echo=True)
 
-async def db_init():
-    async with db_engine.begin() as conn:
-        await conn.run_sync(model.Base.metadata.create_all)
-asyncio.run(db_init())
+    async def db_init():
+        async with db_engine.begin() as conn:
+            await conn.run_sync(model.Base.metadata.create_all)
+    asyncio.run(db_init())
 
-db_sessionmaker = sessionmaker(bind=db_engine, class_=AsyncSession, autoflush=True)
+    db_sessionmaker = sessionmaker(bind=db_engine, class_=AsyncSession, autoflush=True)
 
