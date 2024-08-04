@@ -38,7 +38,6 @@ async def observe_emoji_change():
                 while True:
                     data = await ws.recv()
                     try:
-                        print(data)
                         j = json.loads(data)
                         match j['type']:
                             case 'emojiAdded':

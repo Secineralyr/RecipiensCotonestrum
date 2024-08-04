@@ -17,7 +17,6 @@ PORT = int(envs['PORT'])
 
 async def periodical_update_all_emojis(t):
     while True:
-        await asyncio.sleep(t)
         try:
             await miapi.update_all_emojis()
         except exc.MiAPIErrorException as ex:
@@ -30,11 +29,10 @@ async def periodical_update_all_emojis(t):
             await websocket.broadcast(msg)
         except Exception:
             traceback.print_exc()
+        await asyncio.sleep(t)
 
 
 async def main():
-    await miapi.update_all_emojis()
-
     task_observe_emoji = asyncio.create_task(miws.observe_emoji_change())
     task_update_all_emojis = asyncio.create_task(periodical_update_all_emojis(3600))
 
