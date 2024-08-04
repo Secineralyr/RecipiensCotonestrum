@@ -11,7 +11,7 @@ class Emoji(Base):
     name = Column(Text, unique=True)
     category = Column(Text)
     tags = Column(Text)
-    is_self_made = Column(Integer, CheckConstraint('is_checked == 0 OR is_checked == 1'))
+    is_self_made = Column(Integer, CheckConstraint('is_self_made == 0 OR is_self_made == 1'))
     license = Column(Text)
     user_id = Column(Text, ForeignKey('users.id'))
     url = Column(Text)
