@@ -26,6 +26,8 @@ async def create_risk():
 
         db_session.add(risk)
 
+        await db_session.commit()
+
     return rid
 
 
@@ -71,6 +73,8 @@ async def set_risk(rid, props):
         remark = risk.remark
         created_at = risk.created_at
         updated_at = risk.updated_at
+
+        await db_session.commit()
     
     msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
     await websocket.broadcast(msg)
