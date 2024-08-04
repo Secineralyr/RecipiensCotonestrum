@@ -56,7 +56,7 @@ async def update_emoji(data_emoji):
                         t = elog[i]['createDate']
                         break
             if datetime.datetime.fromisoformat(emoji.updated_at) >= datetime.datetime.fromisoformat(t):
-                return
+                return emoji_id
             emoji.updated_at = t
         
         created_at = emoji.created_at
@@ -97,6 +97,8 @@ async def update_emoji(data_emoji):
 
     msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, created_at, updated_at).build()
     await websocket.broadcast(msg)
+
+    return emoji_id
 
 async def delete_emoji(data_emoji):
     async with database.db_sessionmaker() as db_session:
