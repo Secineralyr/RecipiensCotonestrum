@@ -117,10 +117,10 @@ async def delete_emoji(data_emoji):
         except sqla.exc.NoResultFound:
             return
         
-        db_session.delete(emoji)
-
         emoji_id = emoji.id
         
+        await db_session.delete(emoji)
+
         await db_session.commit()
     
     msg = wsmsg.EmojiDelete(emoji_id).build()
