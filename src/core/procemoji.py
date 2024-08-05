@@ -46,8 +46,13 @@ async def update_emoji(data_emoji):
             if len(elog) > 0:
                 if elog[0]['type'] == 'Add':
                     t = elog[0]['createDate']
+                    tu = t
+                for i in reversed(range(len(elog))):
+                    if elog[i]['type'] == 'Update':
+                        tu = elog[i]['createDate']
+                        break
             emoji.created_at = t
-            emoji.updated_at = t
+            emoji.updated_at = tu
         else:
             t = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
             if len(elog) > 0:
