@@ -140,7 +140,7 @@ async def plune_emoji(exsits_mids):
                     pluning_mids.append(mid)
         
         for mid in pluning_mids:
-            delete_emoji({'id': mid})
+            await delete_emoji({'id': mid})
 
 
 async def misskey_emoji_added(data):
