@@ -1,7 +1,7 @@
 import asyncio
 
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import close_all_sessions
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from env import envs
@@ -23,5 +23,14 @@ def init():
             await conn.run_sync(model.Base.metadata.create_all)
     asyncio.run(db_init())
 
-    db_sessionmaker = sessionmaker(bind=db_engine, class_=AsyncSession, autoflush=True)
+    db_sessionmaker = async_sessionmaker(bind=db_engine, autoflush=True)
+
+def close():
+    global db_engine, db_sessionmaker
+    if db_engine is not None:
+        asyncio.run(close_all_sessions())
+        asyncio.run(db_engine.dispose())
+        db_engine = None
+        db_sessionmaker = None
+
 
