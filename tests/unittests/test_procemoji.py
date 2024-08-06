@@ -207,7 +207,7 @@ class ProcEmojiTest(unittest.IsolatedAsyncioTestCase):
         async with database.db_sessionmaker() as db_session:
             query = sqla.select(model.Emoji).where(model.Emoji.misskey_id == misskey_id).limit(1)
             with self.assertRaises(sqla.exc.NoResultFound, msg="Found an emoji that was supposed to be deleted."):
-                emoji = (await db_session.execute(query)).one()
+                emoji = (await db_session.execute(query)).one()[0]
 
     async def test_plune_emoji(self):
 
@@ -225,11 +225,11 @@ class ProcEmojiTest(unittest.IsolatedAsyncioTestCase):
         async with database.db_sessionmaker() as db_session:
             query = sqla.select(model.Emoji).where(model.Emoji.misskey_id == misskey_id0).limit(1)
             with self.assertRaises(sqla.exc.NoResultFound, msg="Found an emoji that was supposed to be pluned."):
-                emoji = (await db_session.execute(query)).one()
+                emoji = (await db_session.execute(query)).one()[0]
             
             query = sqla.select(model.Emoji).where(model.Emoji.misskey_id == misskey_id1).limit(1)
             try:
-                emoji = (await db_session.execute(query)).one()
+                emoji = (await db_session.execute(query)).one()[0]
             except sqla.exc.NoResultFound:
                 self.fail("Couldn't find an emoji that was supposed to be added.")
 
