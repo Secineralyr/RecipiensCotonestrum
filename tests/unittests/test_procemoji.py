@@ -178,20 +178,20 @@ class ProcEmojiTest(unittest.IsolatedAsyncioTestCase):
                 user_id_ = user.misskey_id
                 user_name_ = user.username
 
-                self.assertEqual(eid, eid_, "Couldn't match emoji-data 'id'")
-                self.assertEqual(misskey_id, misskey_id_, "Couldn't match emoji-data 'misskey_id'")
-                self.assertEqual(name, name_, "Couldn't match emoji-data 'name'")
-                self.assertEqual(category, category_, "Couldn't match emoji-data 'category'")
-                self.assertEqual(tags, tags_, "Couldn't match emoji-data 'tags'")
-                self.assertEqual(url, url_, "Couldn't match emoji-data 'url'")
-                self.assertEqual(is_self_made, is_self_made_, "Couldn't match emoji-data 'is_self_made'")
-                self.assertEqual(license, license_, "Couldn't match emoji-data 'license'")
+                self.assertEqual(eid, eid_, "Couldn't match emoji-data 'id'.")
+                self.assertEqual(misskey_id, misskey_id_, "Couldn't match emoji-data 'misskey_id'.")
+                self.assertEqual(name, name_, "Couldn't match emoji-data 'name'.")
+                self.assertEqual(category, category_, "Couldn't match emoji-data 'category'.")
+                self.assertEqual(tags, tags_, "Couldn't match emoji-data 'tags'.")
+                self.assertEqual(url, url_, "Couldn't match emoji-data 'url'.")
+                self.assertEqual(is_self_made, is_self_made_, "Couldn't match emoji-data 'is_self_made'.")
+                self.assertEqual(license, license_, "Couldn't match emoji-data 'license'.")
 
-                self.assertEqual(created_at, created_at_, "Couldn't match emoji-data 'created_at'")
-                self.assertEqual(updated_at, updated_at_, "Couldn't match emoji-data 'updated_at'")
+                self.assertEqual(created_at, created_at_, "Couldn't match emoji-data 'created_at'.")
+                self.assertEqual(updated_at, updated_at_, "Couldn't match emoji-data 'updated_at'.")
 
-                self.assertEqual(user_id, user_id_, "Couldn't match user-data 'misskey_id'")
-                self.assertEqual(user_name, user_name_, "Couldn't match emoji-data 'username'")
+                self.assertEqual(user_id, user_id_, "Couldn't match user-data 'misskey_id'.")
+                self.assertEqual(user_name, user_name_, "Couldn't match user-data 'username'.")
 
     async def test_delete_emoji(self):
 
