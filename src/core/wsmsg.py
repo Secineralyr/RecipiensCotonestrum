@@ -2,8 +2,6 @@ import abc
 
 import json
 
-from core import permission as perm
-
 class IWSMessage(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
@@ -180,17 +178,9 @@ class ReasonUpdated(IWSMessage):
 
 
 class Denied(IWSMessage):
-    def __init__(self, op: str, required_level: perm.Permission):
+    def __init__(self, op: str, msg: str):
         self.op = op
-        match required_level:
-            case perm.Permission.EMOJI_MODERATOR:
-                self.msg = "You must have at least 'Emoji Moderator' permission."
-            case perm.Permission.MODERATOR:
-                self.msg = "You must have at least 'Moderator' permission."
-            case perm.Permission.ADMINISTRATOR:
-                self.msg = "You must have at least 'Administrator' permission."
-            case _:
-                self.msg = "Unknown error. This is server-side bug. Please report."
+        self.msg = msg
     
     def _build_json(self) -> dict:
         return \

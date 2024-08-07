@@ -25,5 +25,14 @@ def require(level: Permission):
 
 
 async def send_denied(ws, op, req_level):
-    msg = wsmsg.Denied(op, req_level).build()
+    match req_level:
+        case Permission.EMOJI_MODERATOR:
+            text = "You must have at least 'Emoji Moderator' permission."
+        case Permission.MODERATOR:
+            text = "You must have at least 'Moderator' permission."
+        case Permission.ADMINISTRATOR:
+            text = "You must have at least 'Administrator' permission."
+        case _:
+            text = "Unknown error. This is server-side bug. Please report."
+    msg = wsmsg.Denied(op, text).build()
     await ws.send(msg)
