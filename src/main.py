@@ -4,6 +4,7 @@ import asyncio
 import websockets
 
 from env import envs
+from core import permission as perm
 from core import exc
 from core import wsmsg
 from core.db import database
@@ -23,11 +24,11 @@ async def periodical_update_all_emojis(t):
         except exc.MiAPIErrorException as ex:
             traceback.print_exc()
             msg = wsmsg.MisskeyAPIError('internal', ex.err, f'periodical_update_all_emojis').build()
-            await websocket.broadcast(msg)
+            await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
         except exc.MiUnknownErrorException:
             traceback.print_exc('internal', f'periodical_update_all_emojis')
             msg = wsmsg.MisskeyUnknownError().build()
-            await websocket.broadcast(msg)
+            await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
         except Exception:
             traceback.print_exc()
         await asyncio.sleep(t)

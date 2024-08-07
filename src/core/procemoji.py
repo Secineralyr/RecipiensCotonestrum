@@ -3,6 +3,7 @@ import datetime
 import sqlalchemy as sqla
 
 from core import util
+from core import permission as perm
 from core import wsmsg
 from core import procrisk
 from core.db import database, model
@@ -82,7 +83,7 @@ async def update_emoji(data_emoji):
             user.username = umnm
 
             msg = wsmsg.UserUpdate(uid, umid, umnm).build()
-            await websocket.broadcast(msg)
+            await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
             db_session.add(user)
 
@@ -106,7 +107,7 @@ async def update_emoji(data_emoji):
         await db_session.commit()
 
     msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, uid, created_at, updated_at).build()
-    await websocket.broadcast(msg)
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
     return emoji_id
 
@@ -127,7 +128,7 @@ async def delete_emoji(data_emoji):
         await db_session.commit()
     
     msg = wsmsg.EmojiDelete(emoji_id).build()
-    await websocket.broadcast(msg)
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
 async def plune_emoji(exsits_mids):
     async with database.db_sessionmaker() as db_session:

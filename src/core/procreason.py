@@ -3,6 +3,7 @@ import datetime
 import sqlalchemy as sqla
 
 from core import util
+from core import permission as perm
 from core import wsmsg
 from core import exc
 from core.db import database, model
@@ -26,7 +27,7 @@ async def create_reason(text):
         await db_session.commit()
 
     msg = wsmsg.ReasonUpdated(rsid, text, now, now).build()
-    await websocket.broadcast(msg)
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
     return rsid
 
 
@@ -52,5 +53,5 @@ async def edit_reason(rsid, text):
         await db_session.commit()
 
     msg = wsmsg.ReasonUpdated(rsid, text, created_at, now).build()
-    await websocket.broadcast(msg)
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 

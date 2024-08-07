@@ -14,8 +14,9 @@ from front import receptor
 
 connections = {}
 
-async def broadcast(msg, exclude=None):
-    conns = set(connections) - {exclude,}
+async def broadcast(msg, exclude = None, require: perm.Permission = perm.Permission.USER):
+    filtered_connections = {c for c in connections if c['level'] >= require}
+    conns = set(filtered_connections) - {exclude,}
     websockets.broadcast(conns, msg)
 
 def register(ws):

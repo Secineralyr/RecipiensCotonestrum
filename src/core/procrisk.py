@@ -3,6 +3,7 @@ import datetime
 import sqlalchemy as sqla
 
 from core import util
+from core import permission as perm
 from core import wsmsg
 from core import exc
 from core.db import database, model
@@ -29,7 +30,7 @@ async def create_risk():
         await db_session.commit()
 
     msg = wsmsg.RiskUpdated(rid, 0, 0, None, '', now, now).build()
-    await websocket.broadcast(msg)
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
     return rid
 
@@ -80,5 +81,5 @@ async def set_risk(rid, props):
         await db_session.commit()
     
     msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
-    await websocket.broadcast(msg)
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 

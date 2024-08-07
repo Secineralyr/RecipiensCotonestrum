@@ -39,11 +39,11 @@ async def authenticate(ws, body):
     except exc.MiAPIErrorException as ex:
         traceback.print_exc()
         msg = wsmsg.MisskeyAPIError(globals()['_op'], ex.err).build()
-        await websocket.broadcast(msg)
+        await ws.send(msg)
     except exc.MiUnknownErrorException:
         traceback.print_exc()
         msg = wsmsg.MisskeyUnknownError(globals()['_op'], '').build()
-        await websocket.broadcast(msg)
+        await ws.send(msg)
     else:
         websocket.connections[ws]['level'] = level
 

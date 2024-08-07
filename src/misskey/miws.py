@@ -6,6 +6,7 @@ import websockets
 
 from env import envs
 
+from core import permission as perm
 from core import procemoji
 from core import wsmsg
 from core import exc
@@ -49,11 +50,11 @@ async def observe_emoji_change():
                     except exc.MiAPIErrorException as ex:
                         traceback.print_exc()
                         msg = wsmsg.MisskeyAPIError('internal', ex.err, f'observe_emoji_change type: {j["type"]}').build()
-                        await websocket.broadcast(msg)
+                        await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
                     except exc.MiUnknownErrorException:
                         traceback.print_exc()
                         msg = wsmsg.MisskeyUnknownError('internal', f'observe_emoji_change type: {j["type"]}').build()
-                        await websocket.broadcast(msg)
+                        await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
                     except Exception:
                         traceback.print_exc()
         except websockets.ConnectionClosed:
