@@ -98,6 +98,24 @@ class _RiskData(IWSMessage):
                 'updated_at': self.updated_at
             }
 
+class _ReasonData(IWSMessage):
+
+    def __init__(self, rsid, text, created_at, updated_at):
+        self.id = rsid
+        self.text = text
+        self.created_at = created_at
+        self.updated_at = updated_at
+
+    def _build_json(self) -> dict:
+        return \
+            {
+                'id': self.id,
+                'text': self.text,
+                'created_at': self.created_at,
+                'updated_at': self.updated_at
+            }
+
+
 class EmojiUpdate(IWSMessage):
     def __init__(self, eid, data, created_at, updated_at, misskey_id=None, name=None, category=None, tags=None, url=None, is_self_made=None, license=None, owner_mid=None, owner_name=None):
         self.emoji = _EmojiData(eid, data, created_at, updated_at, misskey_id, name, category, tags, url, is_self_made, license, owner_mid, owner_name)
@@ -132,6 +150,18 @@ class RiskUpdated(IWSMessage):
                 'op': 'risk_update',
                 'body': self.risk._build_json()
             }
+
+class ReasonUpdated(IWSMessage):
+    def __init__(self, rsid, text, created_at, updated_at):
+        self.reason = _ReasonData(rsid, text, created_at, updated_at)
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'reason_update',
+                'body': self.reason._build_json()
+            }
+
 
 class Denied(IWSMessage):
     def __init__(self, op: str, required_level: perm.Permission):
