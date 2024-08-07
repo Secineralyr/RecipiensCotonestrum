@@ -8,6 +8,7 @@ from aiohttp.client_exceptions import ContentTypeError
 import sqlalchemy as sqla
 
 from core import util
+from core import logging
 from core import wsmsg
 from core import permission as perm
 from core import procemoji
@@ -33,7 +34,7 @@ else:
     WS_SCHEME = 'wss'
 
 
-async def authenticate(token):
+async def authenticate(token, ws):
     uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/i'
     async with aiohttp.ClientSession() as session:
         params = {'i': token}
@@ -63,6 +64,16 @@ async def authenticate(token):
             db_session.add(user)
             await db_session.commit()
 
+            logging.write(ws,
+            {
+                'op': 'create_user',
+                'body': {
+                    'id': uid,
+                    'misskey_id': umid,
+                    'username': umnm,
+                }
+            })
+
             msg = wsmsg.UserUpdate(uid, umid, umnm).build()
             await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
@@ -74,6 +85,18 @@ async def authenticate(token):
         level = perm.Permission.EMOJI_MODERATOR
     else:
         level = perm.Permission.USER
+
+    logging.write(ws,
+    {
+        'op': 'authenticate',
+        'body': {
+            'id': uid,
+            'misskey_id': umid,
+            'username': umnm,
+            'level': int(level),
+        }
+    })
+
     return uid, level
 
 async def get_emoji_log(emoji_mid):

@@ -35,7 +35,7 @@ def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
 @receptor('auth', perm.Permission.NO_CREDENTIAL)
 async def authenticate(ws, body):
     try:
-        uid, level = await miapi.authenticate(body['token'])
+        uid, level = await miapi.authenticate(body['token'], ws)
     except exc.MiAPIErrorException as ex:
         traceback.print_exc()
         msg = wsmsg.MisskeyAPIError(globals()['_op'], ex.err).build()
