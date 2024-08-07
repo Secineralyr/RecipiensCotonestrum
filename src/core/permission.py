@@ -5,6 +5,7 @@ from core import wsmsg
 
 
 class Permission(IntEnum):
+    NO_CREDENTIAL = -1
     USER = 0
     EMOJI_MODERATOR = 1
     MODERATOR = 2
@@ -26,6 +27,8 @@ def require(level: Permission):
 
 async def send_denied(ws, op, req_level):
     match req_level:
+        case Permission.USER:
+            text = "You must have at least 'User' permission."
         case Permission.EMOJI_MODERATOR:
             text = "You must have at least 'Emoji Moderator' permission."
         case Permission.MODERATOR:

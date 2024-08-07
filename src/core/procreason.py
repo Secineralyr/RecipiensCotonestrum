@@ -3,6 +3,7 @@ import datetime
 import sqlalchemy as sqla
 
 from core import util
+from core import logging
 from core import permission as perm
 from core import wsmsg
 from core import exc
@@ -11,7 +12,7 @@ from core.db import database, model
 from front import websocket
 
 
-async def create_reason(text):
+async def create_reason(text, ws=None):
     async with database.db_sessionmaker() as db_session:
         now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
         rsid = util.randid()
@@ -26,12 +27,22 @@ async def create_reason(text):
 
         await db_session.commit()
 
+    logging.write(ws,
+    {
+        'op': 'create_reason',
+        'body': {
+            'id': rsid,
+            'text': text
+        }
+    })
+
     msg = wsmsg.ReasonUpdated(rsid, text, now, now).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
     return rsid
 
 
-async def edit_reason(rsid, text):
+async def edit_reason(rsid, text, ws=None):
+    changes = {}
     async with database.db_sessionmaker() as db_session:
         now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
 
@@ -44,6 +55,10 @@ async def edit_reason(rsid, text):
         if reason.reason == text:
             return
 
+        if reason.reason != text:
+            before = reason.reason
+            changes['reason'] = (before, text)
+
         reason.reason = text
 
         reason.updated_at = now
@@ -51,6 +66,15 @@ async def edit_reason(rsid, text):
         created_at = reason.created_at
 
         await db_session.commit()
+
+    logging.write(ws,
+    {
+        'op': 'update_reason',
+        'body': {
+            'id': rsid,
+            'changes': changes
+        }
+    })
 
     msg = wsmsg.ReasonUpdated(rsid, text, created_at, now).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)

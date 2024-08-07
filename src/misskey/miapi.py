@@ -5,9 +5,16 @@ from env import envs
 from json.decoder import JSONDecodeError
 from aiohttp.client_exceptions import ContentTypeError
 
+import sqlalchemy as sqla
+
+from core import util
+from core import wsmsg
 from core import permission as perm
 from core import procemoji
 from core import exc
+from core.db import database, model
+
+from front import websocket
 
 MISSKEY_HOST = envs['MISSKEY_HOST']
 MISSKEY_TOKEN = envs['MISSKEY_TOKEN']
@@ -37,6 +44,28 @@ async def authenticate(token):
                     raise exc.MiAPIErrorException(data)
             except (ContentTypeError, JSONDecodeError):
                 raise exc.MiUnknownErrorException()
+
+    async with database.db_sessionmaker() as db_session:
+        umid = data['id']
+        umnm = data['username']
+
+        try:
+            query = sqla.select(model.User).where(model.User.misskey_id == umid).limit(1)
+            user = (await db_session.execute(query)).one()[0]
+            uid = user.id
+        except sqla.exc.NoResultFound:
+            user = model.User()
+            uid = util.randid()
+            user.id = uid
+            user.misskey_id = umid
+            user.username = umnm
+
+            db_session.add(user)
+            await db_session.commit()
+
+            msg = wsmsg.UserUpdate(uid, umid, umnm).build()
+            await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+
     if data['isAdmin']:
         level = perm.Permission.ADMINISTRATOR
     elif data['isModerator']:
@@ -45,7 +74,7 @@ async def authenticate(token):
         level = perm.Permission.EMOJI_MODERATOR
     else:
         level = perm.Permission.USER
-    return level
+    return uid, level
 
 async def get_emoji_log(emoji_mid):
     uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/admin/emoji/get-emoji-log'

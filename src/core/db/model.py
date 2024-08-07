@@ -50,4 +50,13 @@ class Reason(Base):
     created_at = Column(Text)
     updated_at = Column(Text)
 
+class Log(Base):
+    __tablename__ = 'logs'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    operator = Column(Text, ForeignKey('users.id'))
+    text = Column(Text)
+    created_at = Column(Text)
+
+    users = relationship('User')
 

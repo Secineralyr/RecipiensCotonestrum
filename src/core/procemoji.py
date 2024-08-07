@@ -3,6 +3,7 @@ import datetime
 import sqlalchemy as sqla
 
 from core import util
+from core import logging
 from core import permission as perm
 from core import wsmsg
 from core import procrisk
@@ -14,6 +15,7 @@ from misskey import miapi
 
 # add or update
 async def update_emoji(data_emoji):
+    changes = {}
     async with database.db_sessionmaker() as db_session:
         data_owner = data_emoji['user']
 
@@ -32,14 +34,41 @@ async def update_emoji(data_emoji):
 
         emoji_id = emoji.id
 
-        emoji.name = data_emoji['name']
-        emoji.category = data_emoji['category']
-        emoji.tags = ' '.join(data_emoji['aliases'])
+        emoji_name = data_emoji['name']
+        emoji_category = data_emoji['category']
+        emoji_tags = ' '.join(data_emoji['aliases'])
+        emoji_is_self_made = data_emoji['isSelfMadeResource']
+        emoji_license = data_emoji['license']
+        emoji_url = data_emoji['url']
 
-        emoji.is_self_made = data_emoji['isSelfMadeResource']
-        emoji.license = data_emoji['license']
+        if not new:
+            if emoji_name != emoji.name:
+                before = emoji.name
+                changes['emoji_name'] = (before, emoji_name)
+            if emoji_category != emoji.category:
+                before = emoji.category
+                changes['emoji_category'] = (before, emoji_category)
+            if emoji_tags != emoji.tags:
+                before = emoji.tags
+                changes['emoji_tags'] = (before, emoji_tags)
+            if emoji_is_self_made != emoji.is_self_made:
+                before = emoji.is_self_made
+                changes['emoji_is_self_made'] = (before, emoji_is_self_made)
+            if emoji_license != emoji.license:
+                before = emoji.license
+                changes['emoji_license'] = (before, emoji_license)
+            if emoji_url != emoji.url:
+                before = emoji.url
+                changes['emoji_url'] = (before, emoji_url)
 
-        emoji.url = data_emoji['url']
+        emoji.name = emoji_name
+        emoji.category = emoji_category
+        emoji.tags = emoji_tags
+
+        emoji.is_self_made = emoji_is_self_made
+        emoji.license = emoji_license
+
+        emoji.url = emoji_url
         
         elog = await miapi.get_emoji_log(emoji_mid)
         if new:
@@ -70,12 +99,15 @@ async def update_emoji(data_emoji):
 
         umid = data_owner['id']
         umnm = data_owner['username']
+
+        new_user = False
         
         try:
             query = sqla.select(model.User).where(model.User.misskey_id == umid).limit(1)
             user = (await db_session.execute(query)).one()[0]
             uid = user.id
         except sqla.exc.NoResultFound:
+            new_user = True
             user = model.User()
             uid = util.randid()
             user.id = uid
@@ -106,6 +138,41 @@ async def update_emoji(data_emoji):
 
         await db_session.commit()
 
+    if new:
+        logging.write(None,
+        {
+            'op': 'create_emoji',
+            'body': {
+                'id': emoji_id,
+                'misskey_id': emoji_mid,
+                'name': emoji_name,
+                'category': emoji_category,
+                'tags': emoji_tags,
+                'is_self_made': emoji_is_self_made,
+                'license': emoji_license,
+                'user_id': uid,
+                'url': emoji_url,
+                'risk_id': rid,
+            }
+        })
+    else:
+        logging.write(None,
+        {
+            'op': 'update_emoji',
+            'body': {
+                'id': emoji_id,
+                'changes': changes,
+            }
+        })
+    if new_user:
+        logging.write(None,
+        {
+            'op': 'create_user',
+            'body': {
+                'id': uid,
+            }
+        })
+
     msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, uid, created_at, updated_at).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
@@ -122,10 +189,36 @@ async def delete_emoji(data_emoji):
             return
         
         emoji_id = emoji.id
+        emoji_name = emoji.name
+        emoji_category = emoji.category
+        emoji_tags = emoji.tags
+        emoji_is_self_made = emoji.is_self_made
+        emoji_license = emoji.license
+        emoji_url = emoji.url
+
+        uid = emoji.user_id
+        rid = emoji.risk_id
         
         await db_session.delete(emoji)
 
         await db_session.commit()
+    
+    logging.write(None,
+    {
+        'op': 'delete_emoji',
+        'body': {
+            'id': emoji_id,
+            'misskey_id': emoji_mid,
+            'name': emoji_name,
+            'category': emoji_category,
+            'tags': emoji_tags,
+            'is_self_made': emoji_is_self_made,
+            'license': emoji_license,
+            'user_id': uid,
+            'url': emoji_url,
+            'risk_id': rid,
+        }
+    })
     
     msg = wsmsg.EmojiDelete(emoji_id).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)

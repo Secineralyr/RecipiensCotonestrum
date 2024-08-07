@@ -7,7 +7,6 @@ import websockets
 
 from core import permission as perm
 from core import error
-from core import wsmsg
 
 from front import receptor
 
@@ -21,11 +20,14 @@ async def broadcast(msg, exclude = None, require: perm.Permission = perm.Permiss
 
 def register(ws):
     task_recv = asyncio.create_task(reception(ws))
-    connections[ws] = {'task_recv': task_recv, 'level': perm.Permission.USER}
+    connections[ws] = {'task_recv': task_recv, 'level': perm.Permission.NO_CREDENTIAL, 'uid': None}
 
 def unregister(ws):
     connections[ws]['task_recv'].cancel()
     del connections[ws]
+
+def get_uid(ws):
+    return connections[ws]['uid']
 
 async def connect(ws, path):
     register(ws)

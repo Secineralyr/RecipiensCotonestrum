@@ -3,6 +3,7 @@ import datetime
 import sqlalchemy as sqla
 
 from core import util
+from core import logging
 from core import permission as perm
 from core import wsmsg
 from core import exc
@@ -11,7 +12,7 @@ from core.db import database, model
 from front import websocket
 
 
-async def create_risk():
+async def create_risk(ws=None):
     async with database.db_sessionmaker() as db_session:
         now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
         rid = util.randid()
@@ -29,13 +30,21 @@ async def create_risk():
 
         await db_session.commit()
 
+    logging.write(ws,
+    {
+        'op': 'create_risk',
+        'body': {
+            'id': rid,
+        }
+    })
+
     msg = wsmsg.RiskUpdated(rid, 0, 0, None, '', now, now).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
     return rid
 
 
-async def set_risk(rid, props):
+async def set_risk(rid, props, ws=None):
     async with database.db_sessionmaker() as db_session:
         now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
 
@@ -51,20 +60,24 @@ async def set_risk(rid, props):
             match prop:
                 case 'checked':
                     if risk.is_checked != value:
+                        before = risk.is_checked
                         risk.is_checked = value
-                        changes[prop] = value
+                        changes[prop] = (before, value)
                 case 'level':
                     if risk.level != value:
+                        before = risk.level
                         risk.level = value
-                        changes[prop] = value
+                        changes[prop] = (before, value)
                 case 'reason_id':
                     if risk.reason_genre != value:
+                        before = risk.reason_genre
                         risk.reason_genre = value
-                        changes[prop] = value
+                        changes[prop] = (before, value)
                 case 'remark':
                     if risk.remark != value:
+                        before = risk.remark
                         risk.remark = value
-                        changes[prop] = value
+                        changes[prop] = (before, value)
         
         if len(changes) == 0:
             return
@@ -79,6 +92,15 @@ async def set_risk(rid, props):
         updated_at = risk.updated_at
 
         await db_session.commit()
+
+    logging.write(ws,
+    {
+        'op': 'update_risk',
+        'body': {
+            'id': rid,
+            'changes': changes
+        }
+    })
     
     msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)

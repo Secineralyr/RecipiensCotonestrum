@@ -32,10 +32,10 @@ def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
     return _receptor
 
 
-@receptor('auth', perm.Permission.USER)
+@receptor('auth', perm.Permission.NO_CREDENTIAL)
 async def authenticate(ws, body):
     try:
-        level = await miapi.authenticate(body['token'])
+        uid, level = await miapi.authenticate(body['token'])
     except exc.MiAPIErrorException as ex:
         traceback.print_exc()
         msg = wsmsg.MisskeyAPIError(globals()['_op'], ex.err).build()
@@ -46,6 +46,7 @@ async def authenticate(ws, body):
         await ws.send(msg)
     else:
         websocket.connections[ws]['level'] = level
+        websocket.connections[ws]['uid'] = uid
 
 @receptor('fetch_emoji', perm.Permission.EMOJI_MODERATOR)
 async def send_emoji(ws, body):
@@ -208,6 +209,6 @@ async def set_risk_prop(ws, body):
     rid = body['id']
     props = body['props']
     try:
-        procrisk.set_risk(rid, props)
+        procrisk.set_risk(rid, props, ws=ws)
     except exc.NoSuchRiskException:
         error.send_no_such_risk(ws, globals()['_op'], rid)
