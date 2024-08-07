@@ -56,7 +56,7 @@ class ProcRiskTest(unittest.IsolatedAsyncioTestCase):
     async def test_set_risk(self):
         rid = await procrisk.create_risk()
 
-        await procrisk.set_risk(rid, props)
+        await procrisk.update_risk(rid, props)
 
         async with database.db_sessionmaker() as db_session:
             query = sqla.select(model.Risk).where(model.Risk.id == rid).limit(1)

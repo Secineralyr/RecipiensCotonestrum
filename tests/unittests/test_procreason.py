@@ -50,7 +50,7 @@ class ProcReasonTest(unittest.IsolatedAsyncioTestCase):
     async def test_edit_reason(self):
         rsid = await procreason.create_reason(text0)
 
-        await procreason.edit_reason(rsid, text1)
+        await procreason.update_reason(rsid, text1)
 
         async with database.db_sessionmaker() as db_session:
             query = sqla.select(model.Reason).where(model.Reason.id == rsid).limit(1)

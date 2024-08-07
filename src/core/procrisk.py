@@ -44,7 +44,7 @@ async def create_risk(ws=None):
     return rid
 
 
-async def set_risk(rid, props, ws=None):
+async def update_risk(rid, props, ws=None):
     async with database.db_sessionmaker() as db_session:
         now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
 

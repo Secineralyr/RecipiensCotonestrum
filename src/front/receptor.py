@@ -209,6 +209,6 @@ async def set_risk_prop(ws, body):
     rid = body['id']
     props = body['props']
     try:
-        procrisk.set_risk(rid, props, ws=ws)
+        procrisk.update_risk(rid, props, ws=ws)
     except exc.NoSuchRiskException:
         error.send_no_such_risk(ws, globals()['_op'], rid)

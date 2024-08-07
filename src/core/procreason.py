@@ -41,7 +41,7 @@ async def create_reason(text, ws=None):
     return rsid
 
 
-async def edit_reason(rsid, text, ws=None):
+async def update_reason(rsid, text, ws=None):
     changes = {}
     async with database.db_sessionmaker() as db_session:
         now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
