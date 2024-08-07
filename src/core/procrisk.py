@@ -28,6 +28,9 @@ async def create_risk():
 
         await db_session.commit()
 
+    msg = wsmsg.RiskUpdated(rid, 0, 0, None, '', now, now).build()
+    await websocket.broadcast(msg)
+
     return rid
 
 
