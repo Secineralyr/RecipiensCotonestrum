@@ -49,7 +49,7 @@ class ProcRiskTest(unittest.IsolatedAsyncioTestCase):
         async with database.db_sessionmaker() as db_session:
             query = sqla.select(model.Risk).where(model.Risk.id == rid).limit(1)
             try:
-                risk = (await db_session.execute(query)).one()
+                risk = (await db_session.execute(query)).one()[0]
             except sqla.exc.NoResultFound:
                 self.fail("Couldn't find a risk that was supposed to be added.")
 
