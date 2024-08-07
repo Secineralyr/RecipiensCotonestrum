@@ -21,3 +21,7 @@ async def send_no_such_user(ws, op, uid):
 async def send_no_such_risk(ws, op, rid):
     msg = wsmsg.Error(op, f'No such risk data. (ID: {rid})').build()
     await ws.send(msg)
+
+async def send_no_such_reason(ws, op, rsid):
+    msg = wsmsg.Error(op, f'No such reason data. (ID: {rsid})').build()
+    await ws.send(msg)

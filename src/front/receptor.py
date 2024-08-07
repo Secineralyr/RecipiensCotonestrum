@@ -129,6 +129,80 @@ async def send_all_users(ws, body):
                 msg = wsmsg.UserUpdate(uid, misskey_id, username).build()
                 await ws.send(msg)
 
+@receptor('fetch_risk', perm.Permission.EMOJI_MODERATOR)
+async def send_risk(ws, body):
+    rid = body['id']
+    async with database.db_sessionmaker() as db_session:
+        query = sqla.select(model.Risk).where(model.Risk.id == rid).limit(1)
+        try:
+            risk = (await db_session.execute(query)).one()[0]
+        except sqla.exc.NoResultFound:
+            error.send_no_such_risk(ws, globals()['_op'], rid)
+        else:
+            checked = risk.is_checked
+            level = risk.level
+            reason_genre = risk.reason_genre
+            remark = risk.remark
+            created_at = risk.created_at
+            updated_at = risk.updated_at
+
+            msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
+            await ws.send(msg)
+
+@receptor('fetch_all_risks', perm.Permission.EMOJI_MODERATOR)
+async def send_all_risks(ws, body):
+    async with database.db_sessionmaker() as db_session:
+        query = sqla.select(model.Risk)
+        results = await db_session.stream(query)
+        async for part in results.partitions(10):
+            for result in part:
+                risk = result[0]
+
+                rid = risk.id
+                checked = risk.is_checked
+                level = risk.level
+                reason_genre = risk.reason_genre
+                remark = risk.remark
+                created_at = risk.created_at
+                updated_at = risk.updated_at
+
+                msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
+                await ws.send(msg)
+
+@receptor('fetch_reason', perm.Permission.EMOJI_MODERATOR)
+async def send_reason(ws, body):
+    rsid = body['id']
+    async with database.db_sessionmaker() as db_session:
+        query = sqla.select(model.Reason).where(model.Reason.id == rsid).limit(1)
+        try:
+            reason = (await db_session.execute(query)).one()[0]
+        except sqla.exc.NoResultFound:
+            error.send_no_such_reason(ws, globals()['_op'], rsid)
+        else:
+            text = reason.reason
+            created_at = reason.created_at
+            updated_at = reason.updated_at
+
+            msg = wsmsg.ReasonUpdated(rsid, text, created_at, updated_at).build()
+            await ws.send(msg)
+
+@receptor('fetch_all_reasons', perm.Permission.EMOJI_MODERATOR)
+async def send_all_reasons(ws, body):
+    async with database.db_sessionmaker() as db_session:
+        query = sqla.select(model.Reason)
+        results = await db_session.stream(query)
+        async for part in results.partitions(10):
+            for result in part:
+                reason = result[0]
+
+                rsid = reason.id
+                text = reason.reason
+                created_at = reason.created_at
+                updated_at = reason.updated_at
+
+                msg = wsmsg.ReasonUpdated(rsid, text, created_at, updated_at).build()
+                await ws.send(msg)
+
 @receptor('set_risk_prop', perm.Permission.EMOJI_MODERATOR)
 async def set_risk_prop(ws, body):
     rid = body['id']
