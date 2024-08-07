@@ -35,6 +35,10 @@ async def create_risk(ws=None):
         'op': 'create_risk',
         'body': {
             'id': rid,
+            'is_checked': 0,
+            'level': 0,
+            'reason_genre': None,
+            'remark': '',
         }
     })
 

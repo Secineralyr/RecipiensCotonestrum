@@ -170,6 +170,8 @@ async def update_emoji(data_emoji):
             'op': 'create_user',
             'body': {
                 'id': uid,
+                'misskey_id': umid,
+                'username': umnm,
             }
         })
 

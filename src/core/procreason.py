@@ -55,9 +55,8 @@ async def update_reason(rsid, text, ws=None):
         if reason.reason == text:
             return
 
-        if reason.reason != text:
-            before = reason.reason
-            changes['reason'] = (before, text)
+        before = reason.reason
+        changes['reason'] = (before, text)
 
         reason.reason = text
 
