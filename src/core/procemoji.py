@@ -81,6 +81,9 @@ async def update_emoji(data_emoji):
             user.misskey_id = umid
             user.username = umnm
 
+            msg = wsmsg.UserUpdate(uid, umid, umnm).build()
+            await websocket.broadcast(msg)
+
             db_session.add(user)
 
         emoji.user_id = uid
@@ -102,7 +105,7 @@ async def update_emoji(data_emoji):
 
         await db_session.commit()
 
-    msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, created_at, updated_at).build()
+    msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, uid, created_at, updated_at).build()
     await websocket.broadcast(msg)
 
     return emoji_id

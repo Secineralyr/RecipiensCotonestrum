@@ -14,6 +14,10 @@ async def send_no_such_emoji(ws, op, eid):
     msg = wsmsg.Error(op, f'No such emoji. (ID: {eid})').build()
     await ws.send(msg)
 
+async def send_no_such_user(ws, op, uid):
+    msg = wsmsg.Error(op, f'No such user. (ID: {uid})').build()
+    await ws.send(msg)
+
 async def send_no_such_risk(ws, op, rid):
     msg = wsmsg.Error(op, f'No such risk data. (ID: {rid})').build()
     await ws.send(msg)
