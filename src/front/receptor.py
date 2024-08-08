@@ -56,7 +56,7 @@ async def send_emoji(ws, body):
         try:
             emoji = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            error.send_no_such_emoji(ws, globals()['_op'], eid)
+            await error.send_no_such_emoji(ws, globals()['_op'], eid)
         else:
             misskey_id = emoji.misskey_id
             name = emoji.name
@@ -106,7 +106,7 @@ async def send_user(ws, body):
         try:
             user = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            error.send_no_such_user(ws, globals()['_op'], uid)
+            await error.send_no_such_user(ws, globals()['_op'], uid)
         else:
             misskey_id = user.misskey_id
             username = user.username
@@ -138,7 +138,7 @@ async def send_risk(ws, body):
         try:
             risk = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            error.send_no_such_risk(ws, globals()['_op'], rid)
+            await error.send_no_such_risk(ws, globals()['_op'], rid)
         else:
             checked = risk.is_checked
             level = risk.level
@@ -178,7 +178,7 @@ async def send_reason(ws, body):
         try:
             reason = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            error.send_no_such_reason(ws, globals()['_op'], rsid)
+            await error.send_no_such_reason(ws, globals()['_op'], rsid)
         else:
             text = reason.reason
             created_at = reason.created_at
@@ -211,4 +211,4 @@ async def set_risk_prop(ws, body):
     try:
         procrisk.update_risk(rid, props, ws=ws)
     except exc.NoSuchRiskException:
-        error.send_no_such_risk(ws, globals()['_op'], rid)
+        await error.send_no_such_risk(ws, globals()['_op'], rid)
