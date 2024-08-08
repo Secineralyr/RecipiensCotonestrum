@@ -18,14 +18,22 @@ receptors = {}
 
 def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
     def _receptor(func):
-        g = func.__globals__
-        g['_op'] = op
 
-        @perm.require(req_level)
+        @perm.require(op, req_level)
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            _op = op
-            await func(*args, **kwargs)
+            g = func.__globals__
+
+            old = g.get('_op', object())
+            g['_op'] = op
+
+            try:
+                await func(*args, **kwargs)
+            finally:
+                if old is object():
+                    del g['_op']
+                else:
+                    g['_op'] = old
         
         receptors[op] = wrapper
         return wrapper
@@ -45,7 +53,7 @@ async def authenticate(ws, body):
         msg = wsmsg.MisskeyUnknownError(globals()['_op'], '').build()
         await ws.send(msg)
     else:
-        websocket.connections[ws]['level'] = level
+        perm.set_level(ws, perm.Permission(level))
         websocket.connections[ws]['uid'] = uid
 
 @receptor('fetch_emoji', perm.Permission.EMOJI_MODERATOR)

@@ -3,12 +3,11 @@ import json
 
 class NoSuchRiskException(Exception):
     def __init__(self):
-        super.__init__()
+        pass
 
 
 class MiAPIErrorException(Exception):
     def __init__(self, err: dict):
-        super.__init__()
         self.err = err
     
     def __str__(self):
@@ -16,5 +15,5 @@ class MiAPIErrorException(Exception):
 
 class MiUnknownErrorException(Exception):
     def __init__(self):
-        super.__init__()
+        pass
 

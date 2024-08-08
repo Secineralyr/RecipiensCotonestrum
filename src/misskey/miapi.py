@@ -41,7 +41,7 @@ async def authenticate(token, ws):
         async with session.post(uri, json=params) as res:
             try:
                 data = await res.json()
-                if 'message' in data:
+                if 'message' in data or 'error' in data:
                     raise exc.MiAPIErrorException(data)
             except (ContentTypeError, JSONDecodeError):
                 raise exc.MiUnknownErrorException()
@@ -64,7 +64,7 @@ async def authenticate(token, ws):
             db_session.add(user)
             await db_session.commit()
 
-            logging.write(ws,
+            await logging.write(ws,
             {
                 'op': 'create_user',
                 'body': {
@@ -86,7 +86,7 @@ async def authenticate(token, ws):
     else:
         level = perm.Permission.USER
 
-    logging.write(ws,
+    await logging.write(ws,
     {
         'op': 'authenticate',
         'body': {
@@ -106,7 +106,7 @@ async def get_emoji_log(emoji_mid):
         async with session.post(uri, json=params) as res:
             try:
                 data = await res.json()
-                if 'message' in data:
+                if 'message' in data or 'error' in data:
                     raise exc.MiAPIErrorException(data)
             except (ContentTypeError, JSONDecodeError):
                 raise exc.MiUnknownErrorException()
@@ -125,7 +125,7 @@ async def update_all_emojis():
             async with session.post(uri, json=params) as res:
                 try:
                     data_emojis = await res.json()
-                    if 'message' in data_emojis:
+                    if 'message' in data_emojis or 'error' in data_emojis:
                         raise exc.MiAPIErrorException(data_emojis)
                 except (ContentTypeError, JSONDecodeError):
                     raise exc.MiUnknownErrorException()

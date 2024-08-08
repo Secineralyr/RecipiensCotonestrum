@@ -7,6 +7,7 @@ import websockets
 
 from core import permission as perm
 from core import error
+from core import wsmsg
 
 from front import receptor
 
@@ -14,13 +15,14 @@ from front import receptor
 connections = {}
 
 async def broadcast(msg, exclude = None, require: perm.Permission = perm.Permission.USER):
-    filtered_connections = {c for c in connections if c['level'] >= require}
+    filtered_connections = {c for c in connections if perm.get_level(c) >= require}
     conns = set(filtered_connections) - {exclude,}
     websockets.broadcast(conns, msg)
 
 def register(ws):
     task_recv = asyncio.create_task(reception(ws))
-    connections[ws] = {'task_recv': task_recv, 'level': perm.Permission.NO_CREDENTIAL, 'uid': None}
+    connections[ws] = {'task_recv': task_recv, 'uid': None}
+    perm.set_level(ws, perm.Permission.NO_CREDENTIAL)
 
 def unregister(ws):
     connections[ws]['task_recv'].cancel()
@@ -55,3 +57,7 @@ async def reception(ws):
                 await error.send_no_such_operation(ws, op)
         except websockets.ConnectionClosed:
             break
+        except:
+            msg = wsmsg.InternalError(op, 'Internal error occured. Please report.').build()
+            await ws.send(msg)
+            traceback.print_exc()

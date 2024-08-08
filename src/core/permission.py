@@ -11,16 +11,26 @@ class Permission(IntEnum):
     MODERATOR = 2
     ADMINISTRATOR = 3
 
+permission_levels = {}
 
-def require(level: Permission):
+def remove(ws):
+    del permission_levels[ws]
+
+def set_level(ws, level: Permission):
+    permission_levels[ws] = level
+
+def get_level(ws):
+    return permission_levels[ws]
+
+def require(op: str, level: Permission):
     def _require(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             ws = args[0]
-            if ws['level'] >= level:
+            if permission_levels[ws] >= level:
                 await func(*args, **kwargs)
             else:
-                await send_denied(ws, level)
+                await send_denied(ws, op, level)
         return wrapper
     return _require
 

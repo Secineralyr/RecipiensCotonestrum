@@ -13,7 +13,10 @@ async def write(ws, data: dict):
         now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
 
         log = model.Log()
-        log.operator = websocket.get_uid(ws)
+        if ws is None:
+            log.operator = None
+        else:
+            log.operator = websocket.get_uid(ws)
         log.text = json.dumps(data)
         log.created_at = now
 

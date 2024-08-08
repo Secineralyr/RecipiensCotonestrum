@@ -139,7 +139,7 @@ async def update_emoji(data_emoji):
         await db_session.commit()
 
     if new:
-        logging.write(None,
+        await logging.write(None,
         {
             'op': 'create_emoji',
             'body': {
@@ -156,7 +156,7 @@ async def update_emoji(data_emoji):
             }
         })
     else:
-        logging.write(None,
+        await logging.write(None,
         {
             'op': 'update_emoji',
             'body': {
@@ -165,7 +165,7 @@ async def update_emoji(data_emoji):
             }
         })
     if new_user:
-        logging.write(None,
+        await logging.write(None,
         {
             'op': 'create_user',
             'body': {
@@ -205,7 +205,7 @@ async def delete_emoji(data_emoji):
 
         await db_session.commit()
     
-    logging.write(None,
+    await logging.write(None,
     {
         'op': 'delete_emoji',
         'body': {

@@ -27,7 +27,7 @@ async def create_reason(text, ws=None):
 
         await db_session.commit()
 
-    logging.write(ws,
+    await logging.write(ws,
     {
         'op': 'create_reason',
         'body': {
@@ -66,7 +66,7 @@ async def update_reason(rsid, text, ws=None):
 
         await db_session.commit()
 
-    logging.write(ws,
+    await logging.write(ws,
     {
         'op': 'update_reason',
         'body': {

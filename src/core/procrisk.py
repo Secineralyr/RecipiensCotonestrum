@@ -30,7 +30,7 @@ async def create_risk(ws=None):
 
         await db_session.commit()
 
-    logging.write(ws,
+    await logging.write(ws,
     {
         'op': 'create_risk',
         'body': {
@@ -97,7 +97,7 @@ async def update_risk(rid, props, ws=None):
 
         await db_session.commit()
 
-    logging.write(ws,
+    await logging.write(ws,
     {
         'op': 'update_risk',
         'body': {
