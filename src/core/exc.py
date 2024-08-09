@@ -5,6 +5,10 @@ class NoSuchRiskException(Exception):
     def __init__(self):
         pass
 
+class NoSuchReasonException(Exception):
+    def __init__(self):
+        pass
+
 
 class MiAPIErrorException(Exception):
     def __init__(self, err: dict):

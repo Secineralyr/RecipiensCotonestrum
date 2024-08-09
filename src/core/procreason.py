@@ -50,7 +50,7 @@ async def update_reason(rsid, text, ws=None):
             query = sqla.select(model.Reason).where(model.Reason.id == rsid).limit(1)
             reason = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            raise exc.NoSuchRiskException()
+            raise exc.NoSuchReasonException()
 
         if reason.reason == text:
             return

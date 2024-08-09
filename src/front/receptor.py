@@ -8,6 +8,7 @@ from core import permission as perm
 from core import exc
 from core import error
 from core import procrisk
+from core import procreason
 from core.db import database, model
 
 from front import websocket
@@ -217,6 +218,18 @@ async def set_risk_prop(ws, body):
     rid = body['id']
     props = body['props']
     try:
-        procrisk.update_risk(rid, props, ws=ws)
+        await procrisk.update_risk(rid, props, ws=ws)
     except exc.NoSuchRiskException:
         await error.send_no_such_risk(ws, globals()['_op'], rid)
+
+@receptor('create_reason', perm.Permission.EMOJI_MODERATOR)
+async def create_reason(ws, body):
+    text = body['text']
+    await procreason.create_reason(text, ws=ws)
+
+@receptor('set_reason_text', perm.Permission.EMOJI_MODERATOR)
+async def create_reason(ws, body):
+    rsid = body['id']
+    text = body['text']
+    await procreason.update_reason(rsid, text, ws=ws)
+
