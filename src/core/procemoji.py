@@ -235,7 +235,7 @@ async def plune_emoji(exsits_mids):
         async for part in results.partitions(10):
             for result in part:
                 mid = result[0].misskey_id
-                if not mid in exsits_mids:
+                if mid not in exsits_mids:
                     pluning_mids.append(mid)
         
         for mid in pluning_mids:
