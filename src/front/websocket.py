@@ -52,9 +52,10 @@ async def reception(ws):
             op = data['op']
             body = data['body']
             if op in receptors:
-                await receptors[op](ws, body)
+                msg = await receptors[op](ws, body)
             else:
-                await error.send_no_such_operation(ws, op)
+                msg = error.no_such_operation(op)
+            ws.send(msg)
         except websockets.ConnectionClosed:
             break
         except:

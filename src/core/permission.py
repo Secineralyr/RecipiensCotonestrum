@@ -41,9 +41,10 @@ def require(op: str, level: Permission):
         async def wrapper(*args, **kwargs):
             ws = args[0]
             if permission_levels[ws] >= level:
-                await func(*args, **kwargs)
+                ret = await func(*args, **kwargs)
             else:
                 await send_denied(ws, op, level)
+            return ret
         return wrapper
     return _require
 

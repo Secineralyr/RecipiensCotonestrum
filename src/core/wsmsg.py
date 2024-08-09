@@ -177,6 +177,21 @@ class ReasonUpdated(IWSMessage):
             }
 
 
+class OK(IWSMessage):
+    def __init__(self, op: str, msg: str = ''):
+        self.op = op
+        self.msg = msg
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'ok',
+                'body': {
+                    'op': self.op,
+                    'message': self.msg
+                }
+            }
+
 class Denied(IWSMessage):
     def __init__(self, op: str, msg: str):
         self.op = op

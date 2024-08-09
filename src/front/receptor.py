@@ -29,12 +29,14 @@ def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
             g['_op'] = op
 
             try:
-                await func(*args, **kwargs)
+                ret = await func(*args, **kwargs)
             finally:
                 if old is object():
                     del g['_op']
                 else:
                     g['_op'] = old
+            
+            return ret
         
         receptors[op] = wrapper
         return wrapper
@@ -47,15 +49,14 @@ async def authenticate(ws, body):
         uid, level = await miapi.authenticate(body['token'], ws)
     except exc.MiAPIErrorException as ex:
         traceback.print_exc()
-        msg = wsmsg.MisskeyAPIError(globals()['_op'], ex.err).build()
-        await ws.send(msg)
+        return wsmsg.MisskeyAPIError(globals()['_op'], ex.err).build()
     except exc.MiUnknownErrorException:
         traceback.print_exc()
-        msg = wsmsg.MisskeyUnknownError(globals()['_op'], '').build()
-        await ws.send(msg)
+        return wsmsg.MisskeyUnknownError(globals()['_op'], '').build()
     else:
         perm.set_level(ws, perm.Permission(level))
         websocket.connections[ws]['uid'] = uid
+        return wsmsg.OK(globals()['_op'], f'You logged in as {perm.get_name(level)}').build()
 
 @receptor('fetch_emoji', perm.Permission.EMOJI_MODERATOR)
 async def send_emoji(ws, body):
@@ -65,7 +66,7 @@ async def send_emoji(ws, body):
         try:
             emoji = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            await error.send_no_such_emoji(ws, globals()['_op'], eid)
+            return error.no_such_emoji(globals()['_op'], eid)
         else:
             misskey_id = emoji.misskey_id
             name = emoji.name
@@ -81,6 +82,7 @@ async def send_emoji(ws, body):
 
             msg = wsmsg.EmojiUpdate(eid, None, uid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
             await ws.send(msg)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('fetch_all_emojis', perm.Permission.EMOJI_MODERATOR)
 async def send_all_emojis(ws, body):
@@ -106,6 +108,7 @@ async def send_all_emojis(ws, body):
 
                 msg = wsmsg.EmojiUpdate(eid, None, uid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
                 await ws.send(msg)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('fetch_user', perm.Permission.EMOJI_MODERATOR)
 async def send_user(ws, body):
@@ -115,13 +118,14 @@ async def send_user(ws, body):
         try:
             user = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            await error.send_no_such_user(ws, globals()['_op'], uid)
+            return error.no_such_user(globals()['_op'], uid)
         else:
             misskey_id = user.misskey_id
             username = user.username
 
             msg = wsmsg.UserUpdate(uid, misskey_id, username).build()
             await ws.send(msg)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('fetch_all_users', perm.Permission.EMOJI_MODERATOR)
 async def send_all_users(ws, body):
@@ -138,6 +142,7 @@ async def send_all_users(ws, body):
 
                 msg = wsmsg.UserUpdate(uid, misskey_id, username).build()
                 await ws.send(msg)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('fetch_risk', perm.Permission.EMOJI_MODERATOR)
 async def send_risk(ws, body):
@@ -147,7 +152,7 @@ async def send_risk(ws, body):
         try:
             risk = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            await error.send_no_such_risk(ws, globals()['_op'], rid)
+            return error.no_such_risk(globals()['_op'], rid)
         else:
             checked = risk.is_checked
             level = risk.level
@@ -158,6 +163,7 @@ async def send_risk(ws, body):
 
             msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
             await ws.send(msg)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('fetch_all_risks', perm.Permission.EMOJI_MODERATOR)
 async def send_all_risks(ws, body):
@@ -178,6 +184,7 @@ async def send_all_risks(ws, body):
 
                 msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
                 await ws.send(msg)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('fetch_reason', perm.Permission.EMOJI_MODERATOR)
 async def send_reason(ws, body):
@@ -187,7 +194,7 @@ async def send_reason(ws, body):
         try:
             reason = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            await error.send_no_such_reason(ws, globals()['_op'], rsid)
+            return error.no_such_reason(globals()['_op'], rsid)
         else:
             text = reason.reason
             created_at = reason.created_at
@@ -195,6 +202,7 @@ async def send_reason(ws, body):
 
             msg = wsmsg.ReasonUpdated(rsid, text, created_at, updated_at).build()
             await ws.send(msg)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('fetch_all_reasons', perm.Permission.EMOJI_MODERATOR)
 async def send_all_reasons(ws, body):
@@ -212,6 +220,7 @@ async def send_all_reasons(ws, body):
 
                 msg = wsmsg.ReasonUpdated(rsid, text, created_at, updated_at).build()
                 await ws.send(msg)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('set_risk_prop', perm.Permission.EMOJI_MODERATOR)
 async def set_risk_prop(ws, body):
@@ -220,16 +229,22 @@ async def set_risk_prop(ws, body):
     try:
         await procrisk.update_risk(rid, props, ws=ws)
     except exc.NoSuchRiskException:
-        await error.send_no_such_risk(ws, globals()['_op'], rid)
+        return error.no_such_risk(globals()['_op'], rid)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('create_reason', perm.Permission.EMOJI_MODERATOR)
 async def create_reason(ws, body):
     text = body['text']
     await procreason.create_reason(text, ws=ws)
+    return wsmsg.OK(globals()['_op']).build()
 
 @receptor('set_reason_text', perm.Permission.EMOJI_MODERATOR)
-async def create_reason(ws, body):
+async def set_reason_text(ws, body):
     rsid = body['id']
     text = body['text']
-    await procreason.update_reason(rsid, text, ws=ws)
+    try:
+        await procreason.update_reason(rsid, text, ws=ws)
+    except exc.NoSuchReasonException:
+        return error.no_such_reason(globals()['_op'], rsid)
+    return wsmsg.OK(globals()['_op']).build()
 
