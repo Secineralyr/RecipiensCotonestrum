@@ -11,6 +11,19 @@ class Permission(IntEnum):
     MODERATOR = 2
     ADMINISTRATOR = 3
 
+def get_name(level: Permission):
+    match level:
+        case Permission.NO_CREDENTIAL:
+            return 'No credential'
+        case Permission.USER:
+            return 'User'
+        case Permission.EMOJI_MODERATOR:
+            return 'Emoji moderator'
+        case Permission.MODERATOR:
+            return 'Moderator'
+        case Permission.ADMINISTRATOR:
+            return 'Administrator'
+
 permission_levels = {}
 
 def remove(ws):
@@ -36,16 +49,9 @@ def require(op: str, level: Permission):
 
 
 async def send_denied(ws, op, req_level):
-    match req_level:
-        case Permission.USER:
-            text = "You must have at least 'User' permission."
-        case Permission.EMOJI_MODERATOR:
-            text = "You must have at least 'Emoji Moderator' permission."
-        case Permission.MODERATOR:
-            text = "You must have at least 'Moderator' permission."
-        case Permission.ADMINISTRATOR:
-            text = "You must have at least 'Administrator' permission."
-        case _:
-            text = "Unknown error. This is server-side bug. Please report."
+    if req_level > Permission.NO_CREDENTIAL and req_level >= Permission.ADMINISTRATOR:
+        text = f"You must have at least '{get_name(req_level)}' permission."
+    else:
+        text = "Unknown error. This is server-side bug. Please report."
     msg = wsmsg.Denied(op, text).build()
     await ws.send(msg)
