@@ -126,7 +126,7 @@ class UserUpdate(IWSMessage):
     def _build_json(self) -> dict:
         return \
             {
-                'op': 'emoji_update',
+                'op': 'user_update',
                 'body': self.user._build_json()
             }
 

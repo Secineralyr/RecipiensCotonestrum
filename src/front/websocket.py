@@ -56,7 +56,7 @@ async def reception(ws):
                 msg = await receptors[op](ws, body, reqid)
             else:
                 msg = error.no_such_operation(op, reqid)
-            ws.send(msg)
+            await ws.send(msg)
         except asyncio.exceptions.CancelledError:
             await ws.close()
             break
