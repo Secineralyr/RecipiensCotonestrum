@@ -38,7 +38,7 @@ async def connect(ws, path):
         await ws.wait_closed()
     except Exception:
         traceback.print_exc()
-        ws.close()
+        await ws.close()
     finally:
         print('websocket connection closed')
         unregister(ws)
@@ -57,9 +57,12 @@ async def reception(ws):
             else:
                 msg = error.no_such_operation(op, reqid)
             ws.send(msg)
+        except asyncio.exceptions.CancelledError:
+            await ws.close()
+            break
         except websockets.ConnectionClosed:
             break
         except:
+            traceback.print_exc()
             msg = wsmsg.InternalError(op, 'Internal error occured. Please report.', reqid).build()
             await ws.send(msg)
-            traceback.print_exc()

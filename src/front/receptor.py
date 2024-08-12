@@ -56,7 +56,7 @@ async def authenticate(ws, body, reqid):
     else:
         perm.set_level(ws, perm.Permission(level))
         websocket.connections[ws]['uid'] = uid
-        return wsmsg.OK(globals()['_op'], reqid, f'You logged in as {perm.get_name(level)}').build()
+        return wsmsg.OK(globals()['_op'], reqid, f"You logged in as '{perm.get_name(level)}'.").build()
 
 @receptor('fetch_emoji', perm.Permission.EMOJI_MODERATOR)
 async def send_emoji(ws, body, reqid):
