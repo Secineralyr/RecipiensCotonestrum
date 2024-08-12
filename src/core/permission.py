@@ -40,19 +40,19 @@ def require(op: str, level: Permission):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             ws = args[0]
+            reqid = args[2]
             if permission_levels[ws] >= level:
                 ret = await func(*args, **kwargs)
             else:
-                await send_denied(ws, op, level)
+                ret = denied(op, level, reqid)
             return ret
         return wrapper
     return _require
 
 
-async def send_denied(ws, op, req_level):
+def denied(op, req_level, reqid):
     if req_level > Permission.NO_CREDENTIAL and req_level >= Permission.ADMINISTRATOR:
         text = f"You must have at least '{get_name(req_level)}' permission."
     else:
         text = "Unknown error. This is server-side bug. Please report."
-    msg = wsmsg.Denied(op, text).build()
-    await ws.send(msg)
+    return wsmsg.Denied(op, text, reqid).build()

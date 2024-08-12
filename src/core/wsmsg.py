@@ -178,14 +178,16 @@ class ReasonUpdated(IWSMessage):
 
 
 class OK(IWSMessage):
-    def __init__(self, op: str, msg: str = ''):
+    def __init__(self, op: str, reqid: str, msg: str = ''):
         self.op = op
+        self.reqid = reqid
         self.msg = msg
     
     def _build_json(self) -> dict:
         return \
             {
                 'op': 'ok',
+                'reqid': self.reqid,
                 'body': {
                     'op': self.op,
                     'message': self.msg
@@ -193,14 +195,16 @@ class OK(IWSMessage):
             }
 
 class Denied(IWSMessage):
-    def __init__(self, op: str, msg: str):
+    def __init__(self, op: str, msg: str, reqid: str):
         self.op = op
         self.msg = msg
+        self.reqid = reqid
     
     def _build_json(self) -> dict:
         return \
             {
                 'op': 'denied',
+                'reqid': self.reqid,
                 'body': {
                     'op': self.op,
                     'message': self.msg
@@ -208,15 +212,17 @@ class Denied(IWSMessage):
             }
 
 class MisskeyAPIError(IWSMessage):
-    def __init__(self, op: str, mi_message: dict, error: str = ''):
+    def __init__(self, op: str, mi_message: dict, reqid: str, error: str = ''):
         self.op = op
-        self.error = error
         self.mi_message = mi_message
+        self.reqid = reqid
+        self.error = error
     
     def _build_json(self) -> dict:
         return \
             {
                 'op': 'misskey_api_error',
+                'reqid': self.reqid,
                 'body': {
                     'op': self.op,
                     'mi_message': self.mi_message,
@@ -225,14 +231,16 @@ class MisskeyAPIError(IWSMessage):
             }
 
 class MisskeyUnknownError(IWSMessage):
-    def __init__(self, op: str, error: str):
+    def __init__(self, op: str, error: str, reqid: str):
         self.op = op
+        self.reqid = reqid
         self.error = error
     
     def _build_json(self) -> dict:
         return \
             {
                 'op': 'misskey_unknown_error',
+                'reqid': self.reqid,
                 'body': {
                     'op': self.op,
                     'message': self.error
@@ -240,14 +248,16 @@ class MisskeyUnknownError(IWSMessage):
             }
 
 class Error(IWSMessage):
-    def __init__(self, op: str, error: str):
+    def __init__(self, op: str, error: str, reqid: str):
         self.op = op
+        self.reqid = reqid
         self.error = error
     
     def _build_json(self) -> dict:
         return \
             {
                 'op': 'error',
+                'reqid': self.reqid,
                 'body': {
                     'op': self.op,
                     'message': self.error
@@ -255,14 +265,16 @@ class Error(IWSMessage):
             }
 
 class InternalError(IWSMessage):
-    def __init__(self, op: str, error: str):
+    def __init__(self, op: str, error: str, reqid: str):
         self.op = op
+        self.reqid = reqid
         self.error = error
     
     def _build_json(self) -> dict:
         return \
             {
                 'op': 'internal_error',
+                'reqid': self.reqid,
                 'body': {
                     'op': self.op,
                     'message': self.error

@@ -50,15 +50,16 @@ async def reception(ws):
         try:
             data = json.loads(await ws.recv())
             op = data['op']
+            reqid = data['reqid']
             body = data['body']
             if op in receptors:
-                msg = await receptors[op](ws, body)
+                msg = await receptors[op](ws, body, reqid)
             else:
-                msg = error.no_such_operation(op)
+                msg = error.no_such_operation(op, reqid)
             ws.send(msg)
         except websockets.ConnectionClosed:
             break
         except:
-            msg = wsmsg.InternalError(op, 'Internal error occured. Please report.').build()
+            msg = wsmsg.InternalError(op, 'Internal error occured. Please report.', reqid).build()
             await ws.send(msg)
             traceback.print_exc()

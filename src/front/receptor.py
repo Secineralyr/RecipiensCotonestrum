@@ -44,29 +44,29 @@ def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
 
 
 @receptor('auth', perm.Permission.NO_CREDENTIAL)
-async def authenticate(ws, body):
+async def authenticate(ws, body, reqid):
     try:
         uid, level = await miapi.authenticate(body['token'], ws)
     except exc.MiAPIErrorException as ex:
         traceback.print_exc()
-        return wsmsg.MisskeyAPIError(globals()['_op'], ex.err).build()
+        return wsmsg.MisskeyAPIError(globals()['_op'], ex.err, reqid).build()
     except exc.MiUnknownErrorException:
         traceback.print_exc()
-        return wsmsg.MisskeyUnknownError(globals()['_op'], '').build()
+        return wsmsg.MisskeyUnknownError(globals()['_op'], '', reqid).build()
     else:
         perm.set_level(ws, perm.Permission(level))
         websocket.connections[ws]['uid'] = uid
-        return wsmsg.OK(globals()['_op'], f'You logged in as {perm.get_name(level)}').build()
+        return wsmsg.OK(globals()['_op'], reqid, f'You logged in as {perm.get_name(level)}').build()
 
 @receptor('fetch_emoji', perm.Permission.EMOJI_MODERATOR)
-async def send_emoji(ws, body):
+async def send_emoji(ws, body, reqid):
     eid = body['id']
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Emoji).where(model.Emoji.id == eid).limit(1)
         try:
             emoji = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            return error.no_such_emoji(globals()['_op'], eid)
+            return error.no_such_emoji(globals()['_op'], eid, reqid)
         else:
             misskey_id = emoji.misskey_id
             name = emoji.name
@@ -82,10 +82,10 @@ async def send_emoji(ws, body):
 
             msg = wsmsg.EmojiUpdate(eid, None, uid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
             await ws.send(msg)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_all_emojis', perm.Permission.EMOJI_MODERATOR)
-async def send_all_emojis(ws, body):
+async def send_all_emojis(ws, body, reqid):
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Emoji)
         results = await db_session.stream(query)
@@ -108,27 +108,27 @@ async def send_all_emojis(ws, body):
 
                 msg = wsmsg.EmojiUpdate(eid, None, uid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
                 await ws.send(msg)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_user', perm.Permission.EMOJI_MODERATOR)
-async def send_user(ws, body):
+async def send_user(ws, body, reqid):
     uid = body['id']
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.User).where(model.User.id == uid).limit(1)
         try:
             user = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            return error.no_such_user(globals()['_op'], uid)
+            return error.no_such_user(globals()['_op'], uid, reqid)
         else:
             misskey_id = user.misskey_id
             username = user.username
 
             msg = wsmsg.UserUpdate(uid, misskey_id, username).build()
             await ws.send(msg)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_all_users', perm.Permission.EMOJI_MODERATOR)
-async def send_all_users(ws, body):
+async def send_all_users(ws, body, reqid):
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.User)
         results = await db_session.stream(query)
@@ -142,17 +142,17 @@ async def send_all_users(ws, body):
 
                 msg = wsmsg.UserUpdate(uid, misskey_id, username).build()
                 await ws.send(msg)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_risk', perm.Permission.EMOJI_MODERATOR)
-async def send_risk(ws, body):
+async def send_risk(ws, body, reqid):
     rid = body['id']
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Risk).where(model.Risk.id == rid).limit(1)
         try:
             risk = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            return error.no_such_risk(globals()['_op'], rid)
+            return error.no_such_risk(globals()['_op'], rid, reqid)
         else:
             checked = risk.is_checked
             level = risk.level
@@ -163,10 +163,10 @@ async def send_risk(ws, body):
 
             msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
             await ws.send(msg)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_all_risks', perm.Permission.EMOJI_MODERATOR)
-async def send_all_risks(ws, body):
+async def send_all_risks(ws, body, reqid):
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Risk)
         results = await db_session.stream(query)
@@ -184,17 +184,17 @@ async def send_all_risks(ws, body):
 
                 msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
                 await ws.send(msg)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_reason', perm.Permission.EMOJI_MODERATOR)
-async def send_reason(ws, body):
+async def send_reason(ws, body, reqid):
     rsid = body['id']
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Reason).where(model.Reason.id == rsid).limit(1)
         try:
             reason = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
-            return error.no_such_reason(globals()['_op'], rsid)
+            return error.no_such_reason(globals()['_op'], rsid, reqid)
         else:
             text = reason.reason
             created_at = reason.created_at
@@ -202,10 +202,10 @@ async def send_reason(ws, body):
 
             msg = wsmsg.ReasonUpdated(rsid, text, created_at, updated_at).build()
             await ws.send(msg)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_all_reasons', perm.Permission.EMOJI_MODERATOR)
-async def send_all_reasons(ws, body):
+async def send_all_reasons(ws, body, reqid):
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Reason)
         results = await db_session.stream(query)
@@ -220,31 +220,31 @@ async def send_all_reasons(ws, body):
 
                 msg = wsmsg.ReasonUpdated(rsid, text, created_at, updated_at).build()
                 await ws.send(msg)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('set_risk_prop', perm.Permission.EMOJI_MODERATOR)
-async def set_risk_prop(ws, body):
+async def set_risk_prop(ws, body, reqid):
     rid = body['id']
     props = body['props']
     try:
         await procrisk.update_risk(rid, props, ws=ws)
     except exc.NoSuchRiskException:
-        return error.no_such_risk(globals()['_op'], rid)
-    return wsmsg.OK(globals()['_op']).build()
+        return error.no_such_risk(globals()['_op'], rid, reqid)
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('create_reason', perm.Permission.EMOJI_MODERATOR)
-async def create_reason(ws, body):
+async def create_reason(ws, body, reqid):
     text = body['text']
     await procreason.create_reason(text, ws=ws)
-    return wsmsg.OK(globals()['_op']).build()
+    return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('set_reason_text', perm.Permission.EMOJI_MODERATOR)
-async def set_reason_text(ws, body):
+async def set_reason_text(ws, body, reqid):
     rsid = body['id']
     text = body['text']
     try:
         await procreason.update_reason(rsid, text, ws=ws)
     except exc.NoSuchReasonException:
-        return error.no_such_reason(globals()['_op'], rsid)
-    return wsmsg.OK(globals()['_op']).build()
+        return error.no_such_reason(globals()['_op'], rsid, reqid)
+    return wsmsg.OK(globals()['_op'], reqid).build()
 

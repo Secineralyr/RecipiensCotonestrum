@@ -23,11 +23,11 @@ async def periodical_update_all_emojis(t):
             await miapi.update_all_emojis()
         except exc.MiAPIErrorException as ex:
             traceback.print_exc()
-            msg = wsmsg.MisskeyAPIError('internal', ex.err, 'periodical_update_all_emojis').build()
+            msg = wsmsg.MisskeyAPIError('internal', ex.err, '', 'periodical_update_all_emojis').build()
             await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
         except exc.MiUnknownErrorException:
             traceback.print_exc('internal', 'periodical_update_all_emojis')
-            msg = wsmsg.MisskeyUnknownError().build()
+            msg = wsmsg.MisskeyUnknownError('internal', '', '').build()
             await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
         except Exception:
             traceback.print_exc()
