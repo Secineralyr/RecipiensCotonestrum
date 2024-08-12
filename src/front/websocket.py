@@ -64,5 +64,5 @@ async def reception(ws):
             break
         except:
             traceback.print_exc()
-            msg = wsmsg.InternalError(op, 'Internal error occured. Please report.', reqid).build()
+            msg = error.internal_error(op, 'Internal error occured. Please report.', reqid)
             await ws.send(msg)

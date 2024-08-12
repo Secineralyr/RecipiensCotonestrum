@@ -53,7 +53,7 @@ async def observe_emoji_change():
                         await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
                     except exc.MiUnknownErrorException:
                         traceback.print_exc()
-                        msg = wsmsg.MisskeyUnknownError('internal', f'observe_emoji_change type: {j["type"]}').build()
+                        msg = wsmsg.MisskeyUnknownError('internal', f'observe_emoji_change type: {j["type"]}', '').build()
                         await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
                     except Exception:
                         traceback.print_exc()
