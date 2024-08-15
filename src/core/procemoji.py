@@ -175,7 +175,7 @@ async def update_emoji(data_emoji):
             }
         })
 
-    msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, uid, created_at, updated_at).build()
+    msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, uid, rid, created_at, updated_at).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
     return emoji_id

@@ -79,8 +79,9 @@ async def send_emoji(ws, body, reqid):
             updated_at = emoji.updated_at
 
             uid = emoji.user_id
+            rid = emoji.risk_id
 
-            msg = wsmsg.EmojiUpdate(eid, None, uid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
+            msg = wsmsg.EmojiUpdate(eid, None, uid, rid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
             await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
@@ -105,8 +106,9 @@ async def send_all_emojis(ws, body, reqid):
                 updated_at = emoji.updated_at
 
                 uid = emoji.user_id
+                rid = emoji.risk_id
 
-                msg = wsmsg.EmojiUpdate(eid, None, uid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
+                msg = wsmsg.EmojiUpdate(eid, None, uid, rid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
                 await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
