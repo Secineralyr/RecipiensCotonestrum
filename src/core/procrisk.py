@@ -42,7 +42,7 @@ async def create_risk(ws=None):
         }
     })
 
-    msg = wsmsg.RiskUpdated(rid, 0, 0, None, '', now, now).build()
+    msg = wsmsg.RiskUpdate(rid, 0, 0, None, '', now, now).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
     return rid
@@ -106,6 +106,6 @@ async def update_risk(rid, props, ws=None):
         }
     })
     
-    msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
+    msg = wsmsg.RiskUpdate(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 

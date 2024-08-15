@@ -163,7 +163,7 @@ async def send_risk(ws, body, reqid):
             created_at = risk.created_at
             updated_at = risk.updated_at
 
-            msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
+            msg = wsmsg.RiskUpdate(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
             await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
@@ -184,7 +184,7 @@ async def send_all_risks(ws, body, reqid):
                 created_at = risk.created_at
                 updated_at = risk.updated_at
 
-                msg = wsmsg.RiskUpdated(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
+                msg = wsmsg.RiskUpdate(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
                 await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
@@ -202,7 +202,7 @@ async def send_reason(ws, body, reqid):
             created_at = reason.created_at
             updated_at = reason.updated_at
 
-            msg = wsmsg.ReasonUpdated(rsid, text, created_at, updated_at).build()
+            msg = wsmsg.ReasonUpdate(rsid, text, created_at, updated_at).build()
             await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
@@ -220,7 +220,7 @@ async def send_all_reasons(ws, body, reqid):
                 created_at = reason.created_at
                 updated_at = reason.updated_at
 
-                msg = wsmsg.ReasonUpdated(rsid, text, created_at, updated_at).build()
+                msg = wsmsg.ReasonUpdate(rsid, text, created_at, updated_at).build()
                 await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
@@ -238,6 +238,15 @@ async def set_risk_prop(ws, body, reqid):
 async def create_reason(ws, body, reqid):
     text = body['text']
     await procreason.create_reason(text, ws=ws)
+    return wsmsg.OK(globals()['_op'], reqid).build()
+
+@receptor('delete_reason', perm.Permission.EMOJI_MODERATOR)
+async def delete_reason(ws, body, reqid):
+    rsid = body['id']
+    try:
+        await procreason.delete_reason(rsid, ws=ws)
+    except exc.NoSuchReasonException:
+        return error.no_such_reason(globals()['_op'], rsid, reqid)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('set_reason_text', perm.Permission.EMOJI_MODERATOR)

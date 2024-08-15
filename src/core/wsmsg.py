@@ -156,7 +156,7 @@ class EmojiDelete(IWSMessage):
                 }
             }
 
-class RiskUpdated(IWSMessage):
+class RiskUpdate(IWSMessage):
     def __init__(self, rid, checked, level, reason_genre, remark, created_at, updated_at):
         self.risk = _RiskData(rid, checked, level, reason_genre, remark, created_at, updated_at)
     
@@ -167,7 +167,7 @@ class RiskUpdated(IWSMessage):
                 'body': self.risk._build_json()
             }
 
-class ReasonUpdated(IWSMessage):
+class ReasonUpdate(IWSMessage):
     def __init__(self, rsid, text, created_at, updated_at):
         self.reason = _ReasonData(rsid, text, created_at, updated_at)
     
@@ -176,6 +176,19 @@ class ReasonUpdated(IWSMessage):
             {
                 'op': 'reason_update',
                 'body': self.reason._build_json()
+            }
+
+class ReasonDelete(IWSMessage):
+    def __init__(self, rsid):
+        self.id = rsid
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'reason_delete',
+                'body': {
+                    'id': self.id
+                }
             }
 
 

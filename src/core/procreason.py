@@ -36,10 +36,35 @@ async def create_reason(text, ws=None):
         }
     })
 
-    msg = wsmsg.ReasonUpdated(rsid, text, now, now).build()
+    msg = wsmsg.ReasonUpdate(rsid, text, now, now).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
     return rsid
 
+async def delete_reason(rsid, ws=None):
+    async with database.db_sessionmaker() as db_session:
+        try:
+            query = sqla.select(model.Reason).where(model.Reason.id == rsid).limit(1)
+            reason = (await db_session.execute(query)).one()[0]
+        except sqla.exc.NoResultFound:
+            raise exc.NoSuchReasonException()
+        
+        text = reason.reason
+
+        await db_session.delete(reason)
+
+        await db_session.commit()
+    
+    await logging.write(ws,
+    {
+        'op': 'delete_reason',
+        'body': {
+            'id': rsid,
+            'text': text
+        }
+    })
+
+    msg = wsmsg.ReasonDelete(rsid).build()
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
 async def update_reason(rsid, text, ws=None):
     changes = {}
@@ -75,6 +100,6 @@ async def update_reason(rsid, text, ws=None):
         }
     })
 
-    msg = wsmsg.ReasonUpdated(rsid, text, created_at, now).build()
+    msg = wsmsg.ReasonUpdate(rsid, text, created_at, now).build()
     await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
