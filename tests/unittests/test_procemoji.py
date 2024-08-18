@@ -12,6 +12,8 @@ import dotenv.main
 env_path = osp.join(osp.join(osp.join(osp.dirname(__file__), '..'), '..'), '.env')
 env.envs = dotenv.main.dotenv_values(env_path)
 
+import datetime
+
 import sqlalchemy as sqla
 
 from core import procemoji
@@ -153,6 +155,62 @@ class ProcEmojiTest(unittest.IsolatedAsyncioTestCase):
 
         with unittest.mock.patch('misskey.miapi.get_emoji_log') as mock_get_emoji_log:
             mock_get_emoji_log.return_value = data_emoji_log[0]
+
+            eid = await procemoji.update_emoji(data_emoji[0])
+
+        async with database.db_sessionmaker() as db_session:
+            query = sqla.select(model.Emoji, model.User).outerjoin(model.User, model.Emoji.user_id == model.User.id).where(model.Emoji.id == eid).limit(1)
+            try:
+                emoji, user = (await db_session.execute(query)).one()
+            except sqla.exc.NoResultFound:
+                self.fail("Couldn't find an emoji that was supposed to be added.")
+            else:
+                eid_ = emoji.id
+                misskey_id_ = emoji.misskey_id
+                name_ = emoji.name
+                category_ = emoji.category
+                tags_ = emoji.tags
+                url_ = emoji.url
+                is_self_made_ = emoji.is_self_made
+                license_ = emoji.license
+
+                created_at_ = emoji.created_at
+                updated_at_ = emoji.updated_at
+
+                user_id_ = user.misskey_id
+                user_name_ = user.username
+
+                self.assertEqual(eid, eid_, "Couldn't match emoji-data 'id'.")
+                self.assertEqual(misskey_id, misskey_id_, "Couldn't match emoji-data 'misskey_id'.")
+                self.assertEqual(name, name_, "Couldn't match emoji-data 'name'.")
+                self.assertEqual(category, category_, "Couldn't match emoji-data 'category'.")
+                self.assertEqual(tags, tags_, "Couldn't match emoji-data 'tags'.")
+                self.assertEqual(url, url_, "Couldn't match emoji-data 'url'.")
+                self.assertEqual(is_self_made, is_self_made_, "Couldn't match emoji-data 'is_self_made'.")
+                self.assertEqual(license, license_, "Couldn't match emoji-data 'license'.")
+
+                self.assertEqual(created_at, created_at_, "Couldn't match emoji-data 'created_at'.")
+                self.assertEqual(updated_at, updated_at_, "Couldn't match emoji-data 'updated_at'.")
+
+                self.assertEqual(user_id, user_id_, "Couldn't match user-data 'misskey_id'.")
+                self.assertEqual(user_name, user_name_, "Couldn't match user-data 'username'.")
+
+    async def test_update_emoji_with_no_emoji_logs(self):
+
+        misskey_id = data[0]['misskey_id']
+        name = data[0]['name']
+        category = data[0]['category']
+        tags = data[0]['tags']
+        url = data[0]['url']
+        is_self_made = data[0]['is_self_made']
+        license = data[0]['license']
+        created_at = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
+        updated_at = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
+        user_id = data[0]['user_id']
+        user_name = data[0]['user_name']
+
+        with unittest.mock.patch('misskey.miapi.get_emoji_log') as mock_get_emoji_log:
+            mock_get_emoji_log.return_value = []
 
             eid = await procemoji.update_emoji(data_emoji[0])
 
