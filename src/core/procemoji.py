@@ -81,6 +81,8 @@ async def update_emoji(data_emoji):
                     if elog[i]['type'] == 'Update':
                         tu = elog[i]['createDate']
                         break
+            else:
+                tu = t
             emoji.created_at = t
             emoji.updated_at = tu
         else:
