@@ -9,7 +9,7 @@ from env import envs
 from core.db import model
 
 
-DBPATH = envs['DBPATH']
+DBPATH = f"{envs['DATA_DIRPATH']}/{envs['DBPATH']}"
 
 db_engine = None
 db_sessionmaker = None
