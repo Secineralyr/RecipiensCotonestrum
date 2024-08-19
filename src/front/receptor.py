@@ -72,6 +72,10 @@ async def send_emoji(ws, body, reqid):
             name = emoji.name
             category = emoji.category
             tags = emoji.tags
+            if tags == '':
+                ltags = []
+            else:
+                ltags = tags.split(' ')
             url = emoji.url
             is_self_made = emoji.is_self_made
             license = emoji.license
@@ -81,7 +85,7 @@ async def send_emoji(ws, body, reqid):
             uid = emoji.user_id
             rid = emoji.risk_id
 
-            msg = wsmsg.EmojiUpdate(eid, None, uid, rid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
+            msg = wsmsg.EmojiUpdate(eid, None, uid, rid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=ltags, url=url, is_self_made=is_self_made, license=license).build()
             await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
@@ -99,6 +103,10 @@ async def send_all_emojis(ws, body, reqid):
                 name = emoji.name
                 category = emoji.category
                 tags = emoji.tags
+                if tags == '':
+                    ltags = []
+                else:
+                    ltags = tags.split(' ')
                 url = emoji.url
                 is_self_made = emoji.is_self_made
                 license = emoji.license
@@ -108,7 +116,7 @@ async def send_all_emojis(ws, body, reqid):
                 uid = emoji.user_id
                 rid = emoji.risk_id
 
-                msg = wsmsg.EmojiUpdate(eid, None, uid, rid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=tags, url=url, is_self_made=is_self_made, license=license).build()
+                msg = wsmsg.EmojiUpdate(eid, None, uid, rid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=ltags, url=url, is_self_made=is_self_made, license=license).build()
                 await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
