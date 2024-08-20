@@ -14,7 +14,7 @@ from misskey import miapi
 
 
 # add or update
-async def update_emoji(data_emoji):
+async def update_emoji(data_emoji, ws_send=True):
     changes = {}
     async with database.db_sessionmaker() as db_session:
         data_owner = data_emoji['user']
@@ -93,7 +93,10 @@ async def update_emoji(data_emoji):
                         t = elog[i]['createDate']
                         break
             if datetime.datetime.fromisoformat(emoji.updated_at) >= datetime.datetime.fromisoformat(t):
-                return emoji_id
+                if ws_send:
+                    return emoji_id
+                else:
+                    return emoji_id, None
             emoji.updated_at = t
         
         created_at = emoji.created_at
@@ -177,12 +180,14 @@ async def update_emoji(data_emoji):
             }
         })
 
-    msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, uid, rid, created_at, updated_at).build()
-    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+    if ws_send:
+        msg = wsmsg.EmojiUpdate(emoji_id, data_emoji, uid, rid, created_at, updated_at).build()
+        await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+        return emoji_id
+    else:
+        return emoji_id, wsmsg._EmojiData(emoji_id, data_emoji, uid, rid, created_at, updated_at)
 
-    return emoji_id
-
-async def delete_emoji(data_emoji):
+async def delete_emoji(data_emoji, ws_send=True):
     async with database.db_sessionmaker() as db_session:
         emoji_mid = data_emoji['id']
 
@@ -224,13 +229,18 @@ async def delete_emoji(data_emoji):
         }
     })
     
-    msg = wsmsg.EmojiDelete(emoji_id).build()
-    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+    if ws_send:
+        msg = wsmsg.EmojiDelete(emoji_id).build()
+        await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+        return
+    else:
+        return emoji_id
 
 async def plune_emoji(exsits_mids):
     async with database.db_sessionmaker() as db_session:
 
         pluning_mids = []
+        eids = []
 
         query = sqla.select(model.Emoji)
         results = await db_session.stream(query)
@@ -241,7 +251,10 @@ async def plune_emoji(exsits_mids):
                     pluning_mids.append(mid)
         
         for mid in pluning_mids:
-            await delete_emoji({'id': mid})
+            eid = await delete_emoji({'id': mid}, False)
+            eids.append(eid)
+    msg = wsmsg.EmojisDelete(eids).build()
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
 
 async def misskey_emoji_added(data):

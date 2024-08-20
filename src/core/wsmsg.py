@@ -132,6 +132,17 @@ class UserUpdate(IWSMessage):
                 'body': self.user._build_json()
             }
 
+class UsersUpdate(IWSMessage):
+    def __init__(self, users_data: list[_UserData]):
+        self.users = users_data
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'users_update',
+                'body': [u._build_json() for u in self.users]
+            }
+
 class EmojiUpdate(IWSMessage):
     def __init__(self, eid, data, owner_id, risk_id, created_at, updated_at, misskey_id=None, name=None, category=None, tags=None, url=None, is_self_made=None, license=None):
         self.emoji = _EmojiData(eid, data, owner_id, risk_id, created_at, updated_at, misskey_id, name, category, tags, url, is_self_made, license)
@@ -143,8 +154,19 @@ class EmojiUpdate(IWSMessage):
                 'body': self.emoji._build_json()
             }
 
+class EmojisUpdate(IWSMessage):
+    def __init__(self, emojis_data: list[_EmojiData]):
+        self.emojis = emojis_data
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'emojis_update',
+                'body': [e._build_json() for e in self.emojis]
+            }
+
 class EmojiDelete(IWSMessage):
-    def __init__(self, eid):
+    def __init__(self, eid: str):
         self.id = eid
     
     def _build_json(self) -> dict:
@@ -153,6 +175,19 @@ class EmojiDelete(IWSMessage):
                 'op': 'emoji_delete',
                 'body': {
                     'id': self.id
+                }
+            }
+
+class EmojisDelete(IWSMessage):
+    def __init__(self, eids: list[str]):
+        self.ids = eids
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'emojis_delete',
+                'body': {
+                    'ids': self.ids
                 }
             }
 
@@ -167,6 +202,17 @@ class RiskUpdate(IWSMessage):
                 'body': self.risk._build_json()
             }
 
+class RisksUpdate(IWSMessage):
+    def __init__(self, risks_data: list[_RiskData]):
+        self.risks = risks_data
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'risks_update',
+                'body': [r._build_json() for r in self.risks]
+            }
+
 class ReasonUpdate(IWSMessage):
     def __init__(self, rsid, text, created_at, updated_at):
         self.reason = _ReasonData(rsid, text, created_at, updated_at)
@@ -176,6 +222,17 @@ class ReasonUpdate(IWSMessage):
             {
                 'op': 'reason_update',
                 'body': self.reason._build_json()
+            }
+
+class ReasonsUpdate(IWSMessage):
+    def __init__(self, reasons_data: list[_ReasonData]):
+        self.reasons = reasons_data
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'reasons_update',
+                'body': [rs._build_json() for rs in self.reasons]
             }
 
 class ReasonDelete(IWSMessage):
@@ -188,6 +245,19 @@ class ReasonDelete(IWSMessage):
                 'op': 'reason_delete',
                 'body': {
                     'id': self.id
+                }
+            }
+
+class ReasonsDelete(IWSMessage):
+    def __init__(self, rsids: list[str]):
+        self.ids = rsids
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'reasons_delete',
+                'body': {
+                    'ids': self.ids
                 }
             }
 

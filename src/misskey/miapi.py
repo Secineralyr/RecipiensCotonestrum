@@ -117,6 +117,7 @@ async def update_all_emojis():
 
     until = None
     exists = []
+    emojis_data = []
     async with aiohttp.ClientSession() as session:
         while True:
             params = {'limit': 100, 'i': MISSKEY_TOKEN}
@@ -133,10 +134,14 @@ async def update_all_emojis():
                 if len(data_emojis) == 0: break
 
                 for data_emoji in data_emojis:
-                    await procemoji.update_emoji(data_emoji)
+                    eid, emoji_data = await procemoji.update_emoji(data_emoji, False)
+                    if emoji_data is not None:
+                        emojis_data.append(emoji_data)
                     exists.append(data_emoji['id'])
                 
                 until = data_emojis[-1]['id']
-    
+    msg = wsmsg.EmojisUpdate(emojis_data).build()
+    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+
     await procemoji.plune_emoji(exists)
 

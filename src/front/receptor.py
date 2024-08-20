@@ -91,6 +91,7 @@ async def send_emoji(ws, body, reqid):
 
 @receptor('fetch_all_emojis', perm.Permission.EMOJI_MODERATOR)
 async def send_all_emojis(ws, body, reqid):
+    emojis_data = []
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Emoji)
         results = await db_session.stream(query)
@@ -116,8 +117,10 @@ async def send_all_emojis(ws, body, reqid):
                 uid = emoji.user_id
                 rid = emoji.risk_id
 
-                msg = wsmsg.EmojiUpdate(eid, None, uid, rid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=ltags, url=url, is_self_made=is_self_made, license=license).build()
-                await ws.send(msg)
+                emoji_data = wsmsg._EmojiData(eid, None, uid, rid, created_at, updated_at, misskey_id=misskey_id, name=name, category=category, tags=ltags, url=url, is_self_made=is_self_made, license=license)
+                emojis_data.append(emoji_data)
+    msg = wsmsg.EmojisUpdate(emojis_data).build()
+    await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_user', perm.Permission.EMOJI_MODERATOR)
@@ -139,6 +142,7 @@ async def send_user(ws, body, reqid):
 
 @receptor('fetch_all_users', perm.Permission.EMOJI_MODERATOR)
 async def send_all_users(ws, body, reqid):
+    users_data = []
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.User)
         results = await db_session.stream(query)
@@ -150,8 +154,10 @@ async def send_all_users(ws, body, reqid):
                 misskey_id = user.misskey_id
                 username = user.username
 
-                msg = wsmsg.UserUpdate(uid, misskey_id, username).build()
-                await ws.send(msg)
+                user_data = wsmsg._UserData(uid, misskey_id, username)
+                users_data.append(user_data)
+    msg = wsmsg.UsersUpdate(users_data).build()
+    await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_risk', perm.Permission.EMOJI_MODERATOR)
@@ -177,6 +183,7 @@ async def send_risk(ws, body, reqid):
 
 @receptor('fetch_all_risks', perm.Permission.EMOJI_MODERATOR)
 async def send_all_risks(ws, body, reqid):
+    risks_data = []
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Risk)
         results = await db_session.stream(query)
@@ -192,8 +199,10 @@ async def send_all_risks(ws, body, reqid):
                 created_at = risk.created_at
                 updated_at = risk.updated_at
 
-                msg = wsmsg.RiskUpdate(rid, checked, level, reason_genre, remark, created_at, updated_at).build()
-                await ws.send(msg)
+                risk_data = wsmsg._RiskData(rid, checked, level, reason_genre, remark, created_at, updated_at)
+                risks_data.append(risk_data)
+    msg = wsmsg.RisksUpdate(risks_data).build()
+    await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('fetch_reason', perm.Permission.EMOJI_MODERATOR)
@@ -216,6 +225,7 @@ async def send_reason(ws, body, reqid):
 
 @receptor('fetch_all_reasons', perm.Permission.EMOJI_MODERATOR)
 async def send_all_reasons(ws, body, reqid):
+    reasons_data = []
     async with database.db_sessionmaker() as db_session:
         query = sqla.select(model.Reason)
         results = await db_session.stream(query)
@@ -228,8 +238,10 @@ async def send_all_reasons(ws, body, reqid):
                 created_at = reason.created_at
                 updated_at = reason.updated_at
 
-                msg = wsmsg.ReasonUpdate(rsid, text, created_at, updated_at).build()
-                await ws.send(msg)
+                reason_data = wsmsg._ReasonData(rsid, text, created_at, updated_at)
+                reasons_data.append(reason_data)
+    msg = wsmsg.ReasonsUpdate(reasons_data).build()
+    await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('set_risk_prop', perm.Permission.EMOJI_MODERATOR)
