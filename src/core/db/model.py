@@ -33,7 +33,7 @@ class Risk(Base):
     __tablename__ = 'risks'
 
     id = Column(Text, primary_key=True)
-    is_checked = Column(Integer, CheckConstraint('is_checked == 0 OR is_checked == 1'))
+    is_checked = Column(Integer, CheckConstraint('is_checked >= 0 AND is_checked <= 2'))
     level = Column(Integer, CheckConstraint('level >= 0 AND level <= 3'))
     reason_genre = Column(Text, ForeignKey('reasons.id'))
     remark = Column(Text)

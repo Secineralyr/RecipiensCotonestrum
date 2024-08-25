@@ -12,6 +12,11 @@ from core.db import database, model
 from front import websocket
 
 
+# is_checked
+#  0 -> no checked (require check)
+#  1 -> checked
+#  2 -> updated emoji after check (require re-check)
+
 async def create_risk(ws=None):
     async with database.db_sessionmaker() as db_session:
         now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
