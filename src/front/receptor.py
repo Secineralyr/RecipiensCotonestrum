@@ -46,7 +46,7 @@ def receptor(op: str, req_level: perm.Permission = perm.Permission.USER):
 @receptor('auth', perm.Permission.NO_CREDENTIAL)
 async def authenticate(ws, body, reqid):
     try:
-        uid, level = await miapi.authenticate(body['token'], ws)
+        uid, level, username = await miapi.authenticate(body['token'], ws)
     except exc.MiAPIErrorException as ex:
         traceback.print_exc()
         return wsmsg.MisskeyAPIError(globals()['_op'], ex.err, reqid).build()
@@ -56,7 +56,7 @@ async def authenticate(ws, body, reqid):
     else:
         perm.set_level(ws, perm.Permission(level))
         websocket.connections[ws]['uid'] = uid
-        return wsmsg.OK(globals()['_op'], reqid, f"You logged in as '{perm.get_name(level)}'.").build()
+        return wsmsg.OK(globals()['_op'], reqid, f"You logged in as '{perm.get_name(level)}'. (Username: {username})").build()
 
 @receptor('fetch_emoji', perm.Permission.EMOJI_MODERATOR)
 async def send_emoji(ws, body, reqid):

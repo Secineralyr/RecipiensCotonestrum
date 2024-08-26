@@ -97,7 +97,7 @@ async def authenticate(token, ws):
         }
     })
 
-    return uid, level
+    return uid, level, umnm
 
 async def get_emoji_log(emoji_mid):
     uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/admin/emoji/get-emoji-log'
