@@ -126,6 +126,8 @@ async def update_emoji(data_emoji, ws_send=True):
 
         emoji.user_id = uid
 
+        update_checked = False
+
         if new:
             rid = await procrisk.create_risk()
             emoji.risk_id = rid
@@ -135,7 +137,7 @@ async def update_emoji(data_emoji, ws_send=True):
                 query = sqla.select(model.Risk).where(model.Risk.id == rid).limit(1)
                 risk = (await db_session.execute(query)).one()[0]
                 if risk.is_checked == 1:
-                    await procrisk.update_risk(rid, {'checked': 2})
+                    update_checked = True
             except sqla.exc.NoResultFound:
                 rid = procrisk.create_risk()
                 emoji.risk_id = rid
@@ -143,6 +145,9 @@ async def update_emoji(data_emoji, ws_send=True):
         db_session.add(emoji)
 
         await db_session.commit()
+
+    if update_checked:
+        await procrisk.update_risk(rid, {'checked': 2})
 
     if new:
         await logging.write(None,
