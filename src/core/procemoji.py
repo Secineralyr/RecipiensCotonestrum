@@ -14,7 +14,7 @@ from misskey import miapi
 
 
 # add or update
-async def update_emoji(data_emoji, ws_send=True):
+async def update_emoji(data_emoji, ws_send=True, emoji_log=None):
     changes = {}
     async with database.db_sessionmaker() as db_session:
         data_owner = data_emoji['user']
@@ -70,7 +70,10 @@ async def update_emoji(data_emoji, ws_send=True):
 
         emoji.url = emoji_url
         
-        elog = await miapi.get_emoji_log(emoji_mid)
+        if emoji_log is None:
+            elog = await miapi.get_emoji_log(emoji_mid)
+        else:
+            elog = emoji_log
         if new:
             t = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
             if len(elog) > 0:

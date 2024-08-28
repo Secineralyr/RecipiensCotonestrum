@@ -112,6 +112,19 @@ async def get_emoji_log(emoji_mid):
                 raise exc.MiUnknownErrorException()
     return data
 
+async def get_emoji_logs(emoji_mids):
+    uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/admin/emoji/get-emoji-logs'
+    async with aiohttp.ClientSession() as session:
+        params = {'ids': emoji_mids, 'i': MISSKEY_TOKEN}
+        async with session.post(uri, json=params) as res:
+            try:
+                data = await res.json()
+                if 'message' in data or 'error' in data:
+                    raise exc.MiAPIErrorException(data)
+            except (ContentTypeError, JSONDecodeError):
+                raise exc.MiUnknownErrorException()
+    return {log['id']: log['logs'] for log in data}
+
 async def update_all_emojis():
     uri = f'{HTTP_SCHEME}://{MISSKEY_HOST}/api/admin/emoji/list'
 
@@ -133,8 +146,18 @@ async def update_all_emojis():
                 
                 if len(data_emojis) == 0: break
 
+                emoji_mids = [data_emoji['id'] for data_emoji in data_emojis]
+                emoji_logs = await get_emoji_logs(emoji_mids)
+
                 for data_emoji in data_emojis:
-                    eid, emoji_data = await procemoji.update_emoji(data_emoji, False)
+                    emoji_mid = data_emoji['id']
+                    if emoji_mid in emoji_logs:
+                        emoji_log = emoji_logs[emoji_mid]
+                    else:
+                        # If it works as expected, never reach here.
+                        print('warn: update_all_emojis (/admin/emoji/get-emoji-logs did not works correctly?)')
+                        emoji_log = None
+                    eid, emoji_data = await procemoji.update_emoji(data_emoji, False, emoji_log=emoji_log)
                     if emoji_data is not None:
                         emojis_data.append(emoji_data)
                     exists.append(data_emoji['id'])
