@@ -33,6 +33,7 @@ class Risk(Base):
     __tablename__ = 'risks'
 
     id = Column(Text, primary_key=True)
+    emoji_misskey_id = Column(Text, unique=True)
     is_checked = Column(Integer, CheckConstraint('is_checked >= 0 AND is_checked <= 2'))
     level = Column(Integer, CheckConstraint('level >= 0 AND level <= 3'))
     reason_genre = Column(Text, ForeignKey('reasons.id'))

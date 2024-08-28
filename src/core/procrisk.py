@@ -17,38 +17,48 @@ from front import websocket
 #  1 -> checked
 #  2 -> updated emoji after check (require re-check)
 
-async def create_risk(ws=None):
+async def create_risk(emoji_misskey_id, ws=None):
+    new = False
     async with database.db_sessionmaker() as db_session:
-        now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
-        rid = util.randid()
+        try:
+            query = sqla.select(model.Risk).where(model.Risk.emoji_misskey_id == emoji_misskey_id).limit(1)
+            risk = (await db_session.execute(query)).one()[0]
+            rid = risk.id
+        except sqla.exc.NoResultFound:
+            new = True
 
-        risk = model.Risk()
-        risk.id = rid
-        risk.is_checked = 0
-        risk.level = None
-        risk.reason_genre = None
-        risk.remark = ''
-        risk.created_at = now
-        risk.updated_at = now
+            now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+            rid = util.randid()
 
-        db_session.add(risk)
+            risk = model.Risk()
+            risk.emoji_misskey_id = emoji_misskey_id
+            risk.id = rid
+            risk.is_checked = 0
+            risk.level = None
+            risk.reason_genre = None
+            risk.remark = ''
+            risk.created_at = now
+            risk.updated_at = now
 
-        await db_session.commit()
+            db_session.add(risk)
 
-    await logging.write(ws,
-    {
-        'op': 'create_risk',
-        'body': {
-            'id': rid,
-            'is_checked': 0,
-            'level': 0,
-            'reason_genre': None,
-            'remark': '',
-        }
-    })
+            await db_session.commit()
 
-    msg = wsmsg.RiskUpdate(rid, 0, 0, None, '', now, now).build()
-    await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+    if new:
+        await logging.write(ws,
+        {
+            'op': 'create_risk',
+            'body': {
+                'id': rid,
+                'is_checked': 0,
+                'level': 0,
+                'reason_genre': None,
+                'remark': '',
+            }
+        })
+
+        msg = wsmsg.RiskUpdate(rid, 0, 0, None, '', now, now).build()
+        await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
     return rid
 
