@@ -65,7 +65,7 @@ async def update_emoji(data_emoji, ws_send=True, emoji_log=None):
         emoji.category = emoji_category
         emoji.tags = emoji_tags
 
-        emoji.is_self_made = emoji_is_self_made
+        emoji.is_self_made = 1 if emoji_is_self_made else 0
         emoji.license = emoji_license
 
         emoji.url = emoji_url
