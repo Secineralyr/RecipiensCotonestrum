@@ -107,7 +107,7 @@ async def update_emoji(data_emoji, ws_send=True, emoji_log=None):
 
         uid = None
 
-        if data_owner is None:
+        if data_owner is not None:
 
             umid = data_owner['id']
             umnm = data_owner['username']
