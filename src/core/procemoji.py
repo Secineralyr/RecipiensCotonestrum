@@ -106,14 +106,13 @@ async def update_emoji(data_emoji, ws_send=True, emoji_log=None):
         updated_at = emoji.updated_at
 
         uid = None
+        new_user = False
 
         if data_owner is not None:
 
             umid = data_owner['id']
             umnm = data_owner['username']
 
-            new_user = False
-            
             try:
                 query = sqla.select(model.User).where(model.User.misskey_id == umid).limit(1)
                 user = (await db_session.execute(query)).one()[0]
