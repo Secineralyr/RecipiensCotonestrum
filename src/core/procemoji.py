@@ -105,27 +105,31 @@ async def update_emoji(data_emoji, ws_send=True, emoji_log=None):
         created_at = emoji.created_at
         updated_at = emoji.updated_at
 
-        umid = data_owner['id']
-        umnm = data_owner['username']
+        uid = None
 
-        new_user = False
-        
-        try:
-            query = sqla.select(model.User).where(model.User.misskey_id == umid).limit(1)
-            user = (await db_session.execute(query)).one()[0]
-            uid = user.id
-        except sqla.exc.NoResultFound:
-            new_user = True
-            user = model.User()
-            uid = util.randid()
-            user.id = uid
-            user.misskey_id = umid
-            user.username = umnm
+        if data_owner is None:
 
-            msg = wsmsg.UserUpdate(uid, umid, umnm).build()
-            await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+            umid = data_owner['id']
+            umnm = data_owner['username']
 
-            db_session.add(user)
+            new_user = False
+            
+            try:
+                query = sqla.select(model.User).where(model.User.misskey_id == umid).limit(1)
+                user = (await db_session.execute(query)).one()[0]
+                uid = user.id
+            except sqla.exc.NoResultFound:
+                new_user = True
+                user = model.User()
+                uid = util.randid()
+                user.id = uid
+                user.misskey_id = umid
+                user.username = umnm
+
+                msg = wsmsg.UserUpdate(uid, umid, umnm).build()
+                await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+
+                db_session.add(user)
 
         emoji.user_id = uid
 
