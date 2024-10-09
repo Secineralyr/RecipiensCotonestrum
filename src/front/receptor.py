@@ -182,7 +182,7 @@ async def send_all_deleted_emojis(ws, body, reqid):
                 uid = deleted.user_id
                 rid = deleted.risk_id
 
-                emoji_data = wsmsg.DeletedEmojiUpdate(eid, misskey_id, name, category, ltags, url, is_self_made, license, uid, rid, info, deleted_at).build()
+                emoji_data = wsmsg._DeletedEmojiData(eid, misskey_id, name, category, ltags, url, is_self_made, license, uid, rid, info, deleted_at)
                 emojis_data.append(emoji_data)
     msg = wsmsg.DeletedEmojisUpdate(emojis_data).build()
     await ws.send(msg)
