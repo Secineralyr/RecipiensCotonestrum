@@ -292,6 +292,14 @@ async def delete_emoji(data_emoji, ws_send=True):
 
         await db_session.commit()
 
+    if image_b64 is None:
+        image_backup_trunc = None
+    else:
+        if len(image_b64) <= 64:
+            image_backup_trunc = image_b64
+        else:
+            image_backup_trunc = image_b64[:64] + '... (Truncated)'
+
     await logging.write(None,
     {
         'op': 'delete_emoji',
@@ -305,6 +313,7 @@ async def delete_emoji(data_emoji, ws_send=True):
             'license': emoji_license,
             'user_id': uid,
             'url': emoji_url,
+            'image_backup': image_backup_trunc,
             'risk_id': rid,
         }
     })
