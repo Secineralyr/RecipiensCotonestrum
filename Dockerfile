@@ -5,6 +5,7 @@ ENV TZ=Asia/Tokyo
 RUN apt update -y && apt upgrade -y && apt autoremove -y
 
 RUN apt install -y python3-venv
+RUN apt install -y libwebp-dev
 
 
 RUN mkdir /root/main

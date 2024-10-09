@@ -1,4 +1,5 @@
 python-dotenv
+pillow
 websockets
 aiohttp
 aiosqlite

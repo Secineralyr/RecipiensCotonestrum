@@ -1,4 +1,10 @@
 import datetime
+import asyncio
+import aiohttp
+
+import base64
+import io
+from PIL import Image
 
 import sqlalchemy as sqla
 
@@ -225,6 +231,43 @@ async def delete_emoji(data_emoji, ws_send=True):
 
         await db_session.commit()
 
+    async def capture_image():
+        image_b64 = None
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(emoji_url) as res:
+                    if res.status == 200:
+                        with Image.open(io.BytesIO(res.content)) as image:
+                            fi =  image.format
+                            if fi in ['JPEG', 'PNG', 'WebP']:
+                                image.thumbnail((128, 128))
+                                with io.BytesIO() as out:
+                                    image.save(out, format='PNG')
+                                    image_b64 = base64.b64encode(out.getvalue()).decode()
+                            elif fi == 'GIF':
+                                info = image.info
+                                loop = 0
+                                duration = 100
+                                if 'loop' in info:
+                                    loop = info['loop']
+                                if 'duration' in info:
+                                    duration = info['duration']
+                                frames = []
+                                for index in range(image.n_frames):
+                                    image.seek(index)
+                                    frames.append(image.copy().thumbnail((128, 128)))
+                                with io.BytesIO() as out:
+                                    frames[0].save(out, format='GIF', save_all=True, append_images=frames[1:], loop=loop, duration=duration)
+                                    image_b64 = base64.b64encode(out.getvalue()).decode()
+                            else:
+                                return
+        except Exception:
+            import traceback
+            traceback.print_exc()
+        return image_b64
+
+    image_b64 = await asyncio.create_task(capture_image())
+
     now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
 
     async with database.db_sessionmaker() as db_session:
@@ -240,6 +283,7 @@ async def delete_emoji(data_emoji, ws_send=True):
         deleted.risk_id = rid
         deleted.user_id = uid
         deleted.url = emoji_url
+        deleted.image_backup = image_b64
         deleted.info = ''
         deleted.deleted_at = now
 
@@ -281,33 +325,35 @@ async def set_deleted_reason(eid, info, ws=None):
         except sqla.exc.NoResultFound:
             raise exc.NoSuchEmojiException()
 
-    emoji_id = deleted.id
-    emoji_mid = deleted.misskey_id
-    emoji_name = deleted.name
-    emoji_category = deleted.category
-    emoji_tags = deleted.tags
-    emoji_is_self_made = deleted.is_self_made
-    emoji_license = deleted.license
-    rid = deleted.risk_id
-    uid = deleted.user_id
-    emoji_url = deleted.url
-    deleted_at = deleted.deleted_at
+        emoji_id = deleted.id
+        emoji_mid = deleted.misskey_id
+        emoji_name = deleted.name
+        emoji_category = deleted.category
+        emoji_tags = deleted.tags
+        emoji_is_self_made = deleted.is_self_made
+        emoji_license = deleted.license
+        rid = deleted.risk_id
+        uid = deleted.user_id
+        emoji_url = deleted.url
+        deleted_at = deleted.deleted_at
 
-    if deleted.info != info:
-        before = deleted.info
-        deleted.info = info
+        if deleted.info != info:
+            before = deleted.info
+            deleted.info = info
 
-        await logging.write(ws,
-        {
-            'op': 'update_deleted_reason',
-            'body': {
-                'id': eid,
-                'change': [before, info]
-            }
-        })
+            await db_session.commit()
 
-        msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, emoji_is_self_made, emoji_license, uid, rid, '', deleted_at).build()
-        await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+            await logging.write(ws,
+            {
+                'op': 'update_deleted_reason',
+                'body': {
+                    'id': eid,
+                    'change': [before, info]
+                }
+            })
+
+            msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, emoji_is_self_made, emoji_license, uid, rid, info, deleted_at).build()
+            await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
 
 async def plune_emoji(exsits_mids):

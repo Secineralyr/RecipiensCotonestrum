@@ -34,6 +34,7 @@ class DeletedEmoji(Base):
     license = Column(Text)
     user_id = Column(Text, ForeignKey('users.id'))
     url = Column(Text)
+    image_backup = Column(Text)
     risk_id = Column(Text, ForeignKey('risks.id'))
     info = Column(Text)
     deleted_at = Column(Text)
