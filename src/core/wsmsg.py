@@ -228,8 +228,8 @@ class EmojisDelete(IWSMessage):
             }
 
 class DeletedEmojiUpdate(IWSMessage):
-    def __init__(self, eid, misskey_id, name, category, tags, url, is_self_made, license, owner_id, risk_id, info, deleted_at):
-        self.deleted = _DeletedEmojiData(eid, misskey_id, name, category, tags, url, is_self_made, license, owner_id, risk_id, info, deleted_at)
+    def __init__(self, eid, misskey_id, name, category, tags, url, image_backup, is_self_made, license, owner_id, risk_id, info, deleted_at):
+        self.deleted = _DeletedEmojiData(eid, misskey_id, name, category, tags, url, image_backup, is_self_made, license, owner_id, risk_id, info, deleted_at)
     
     def _build_json(self) -> dict:
         return \

@@ -311,7 +311,7 @@ async def delete_emoji(data_emoji, ws_send=True):
     if ws_send:
         msg = wsmsg.EmojiDelete(emoji_id).build()
         await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
-        msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, emoji_is_self_made, emoji_license, uid, rid, '', now)
+        msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, image_b64, emoji_is_self_made, emoji_license, uid, rid, '', now).build()
         await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
         return
     else:
@@ -335,6 +335,7 @@ async def set_deleted_reason(eid, info, ws=None):
         rid = deleted.risk_id
         uid = deleted.user_id
         emoji_url = deleted.url
+        emoji_image_backup = deleted.image_backup
         deleted_at = deleted.deleted_at
 
         if deleted.info != info:
@@ -352,7 +353,7 @@ async def set_deleted_reason(eid, info, ws=None):
                 }
             })
 
-            msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, emoji_is_self_made, emoji_license, uid, rid, info, deleted_at).build()
+            msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, emoji_image_backup, emoji_is_self_made, emoji_license, uid, rid, info, deleted_at).build()
             await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
 
