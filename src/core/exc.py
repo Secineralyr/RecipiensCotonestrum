@@ -1,6 +1,9 @@
 import json
 
 
+class NoSuchEmojiException(Exception):
+    def __init__(self):
+        pass
 class NoSuchRiskException(Exception):
     def __init__(self):
         pass

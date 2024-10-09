@@ -5,6 +5,7 @@ import sqlalchemy as sqla
 from core import util
 from core import logging
 from core import permission as perm
+from core import exc
 from core import wsmsg
 from core import procrisk
 from core.db import database, model
@@ -262,13 +263,52 @@ async def delete_emoji(data_emoji, ws_send=True):
             'risk_id': rid,
         }
     })
-    
+
     if ws_send:
         msg = wsmsg.EmojiDelete(emoji_id).build()
+        await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+        msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, emoji_is_self_made, emoji_license, uid, rid, '', now)
         await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
         return
     else:
         return emoji_id
+
+async def set_deleted_reason(eid, info, ws=None):
+    async with database.db_sessionmaker() as db_session:
+        try:
+            query = sqla.select(model.DeletedEmoji).where(model.DeletedEmoji.id == eid).limit(1)
+            deleted = (await db_session.execute(query)).one()[0]
+        except sqla.exc.NoResultFound:
+            raise exc.NoSuchEmojiException()
+
+    emoji_id = deleted.id
+    emoji_mid = deleted.misskey_id
+    emoji_name = deleted.name
+    emoji_category = deleted.category
+    emoji_tags = deleted.tags
+    emoji_is_self_made = deleted.is_self_made
+    emoji_license = deleted.license
+    rid = deleted.risk_id
+    uid = deleted.user_id
+    emoji_url = deleted.url
+    deleted_at = deleted.deleted_at
+
+    if deleted.info != info:
+        before = deleted.info
+        deleted.info = info
+
+        await logging.write(ws,
+        {
+            'op': 'update_deleted_reason',
+            'body': {
+                'id': eid,
+                'change': [before, info]
+            }
+        })
+
+        msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, emoji_is_self_made, emoji_license, uid, rid, '', deleted_at).build()
+        await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
+
 
 async def plune_emoji(exsits_mids):
     async with database.db_sessionmaker() as db_session:

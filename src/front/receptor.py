@@ -7,7 +7,7 @@ from core import wsmsg
 from core import permission as perm
 from core import exc
 from core import error
-from core import procrisk
+from core import procemoji, procrisk
 from core import procreason
 from core.db import database, model
 
@@ -317,6 +317,16 @@ async def set_risk_prop(ws, body, reqid):
         await procrisk.update_risk(rid, props, ws=ws)
     except exc.NoSuchRiskException:
         return error.no_such_risk(globals()['_op'], rid, reqid)
+    return wsmsg.OK(globals()['_op'], reqid).build()
+
+@receptor('set_deleted_reason', perm.Permission.EMOJI_MODERATOR)
+async def set_deleted_reason(ws, body, reqid):
+    eid = body['id']
+    info = body['info']
+    try:
+        await procemoji.set_deleted_reason(eid, info, ws=ws)
+    except exc.NoSuchEmojiException:
+        return error.no_such_emoji(globals()['_op'], eid, reqid)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
 @receptor('create_reason', perm.Permission.EMOJI_MODERATOR)
