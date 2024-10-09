@@ -208,7 +208,7 @@ async def delete_emoji(data_emoji, ws_send=True):
             emoji = (await db_session.execute(query)).one()[0]
         except sqla.exc.NoResultFound:
             return
-        
+
         emoji_id = emoji.id
         emoji_name = emoji.name
         emoji_category = emoji.category
@@ -219,11 +219,33 @@ async def delete_emoji(data_emoji, ws_send=True):
 
         uid = emoji.user_id
         rid = emoji.risk_id
-        
+
         await db_session.delete(emoji)
 
         await db_session.commit()
-    
+
+    now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+
+    async with database.db_sessionmaker() as db_session:
+        deleted = model.DeletedEmoji()
+
+        deleted.id = emoji_id
+        deleted.misskey_id = emoji_mid
+        deleted.name = emoji_name
+        deleted.category = emoji_category
+        deleted.tags = emoji_tags
+        deleted.is_self_made = emoji_is_self_made
+        deleted.license = emoji_license
+        deleted.risk_id = rid
+        deleted.user_id = uid
+        deleted.url = emoji_url
+        deleted.info = ''
+        deleted.deleted_at = now
+
+        db_session.add(deleted)
+
+        await db_session.commit()
+
     await logging.write(None,
     {
         'op': 'delete_emoji',

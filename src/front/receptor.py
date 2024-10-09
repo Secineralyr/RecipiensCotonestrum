@@ -123,6 +123,71 @@ async def send_all_emojis(ws, body, reqid):
     await ws.send(msg)
     return wsmsg.OK(globals()['_op'], reqid).build()
 
+@receptor('fetch_deleted_emoji', perm.Permission.EMOJI_MODERATOR)
+async def send_deleted_emoji(ws, body, reqid):
+    eid = body['id']
+    async with database.db_sessionmaker() as db_session:
+        query = sqla.select(model.DeletedEmoji).where(model.DeletedEmoji.id == eid).limit(1)
+        try:
+            deleted = (await db_session.execute(query)).one()[0]
+        except sqla.exc.NoResultFound:
+            return error.no_such_emoji(globals()['_op'], eid, reqid)
+        else:
+            misskey_id = deleted.misskey_id
+            name = deleted.name
+            category = deleted.category
+            tags = deleted.tags
+            if tags == '':
+                ltags = []
+            else:
+                ltags = tags.split(' ')
+            url = deleted.url
+            is_self_made = deleted.is_self_made
+            license = deleted.license
+            info = deleted.info
+            deleted_at = deleted.deleted_at
+
+            uid = deleted.user_id
+            rid = deleted.risk_id
+
+            msg = wsmsg.DeletedEmojiUpdate(eid, misskey_id, name, category, ltags, url, is_self_made, license, uid, rid, info, deleted_at).build()
+            await ws.send(msg)
+    return wsmsg.OK(globals()['_op'], reqid).build()
+
+@receptor('fetch_all_deleted_emojis', perm.Permission.EMOJI_MODERATOR)
+async def send_all_deleted_emojis(ws, body, reqid):
+    emojis_data = []
+    async with database.db_sessionmaker() as db_session:
+        query = sqla.select(model.DeletedEmoji)
+        results = await db_session.stream(query)
+        async for part in results.partitions(10):
+            for result in part:
+                deleted = result[0]
+
+                eid = deleted.id
+                misskey_id = deleted.misskey_id
+                name = deleted.name
+                category = deleted.category
+                tags = deleted.tags
+                if tags == '':
+                    ltags = []
+                else:
+                    ltags = tags.split(' ')
+                url = deleted.url
+                is_self_made = deleted.is_self_made
+                license = deleted.license
+                info = deleted.info
+                deleted_at = deleted.deleted_at
+
+                uid = deleted.user_id
+                rid = deleted.risk_id
+
+                emoji_data = wsmsg.DeletedEmojiUpdate(eid, misskey_id, name, category, ltags, url, is_self_made, license, uid, rid, info, deleted_at).build()
+                emojis_data.append(emoji_data)
+    msg = wsmsg.DeletedEmojisUpdate(emojis_data).build()
+    await ws.send(msg)
+    return wsmsg.OK(globals()['_op'], reqid).build()
+
 @receptor('fetch_user', perm.Permission.EMOJI_MODERATOR)
 async def send_user(ws, body, reqid):
     uid = body['id']

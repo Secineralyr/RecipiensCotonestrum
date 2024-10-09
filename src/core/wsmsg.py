@@ -65,6 +65,40 @@ class _EmojiData(IWSMessage):
                 'updated_at': self.updated_at
             }
 
+class _DeletedEmojiData(IWSMessage):
+
+    def __init__(self, eid, misskey_id, name, category, tags, url, is_self_made, license, owner_id, risk_id, info, deleted_at):
+        self.id = eid
+        self.misskey_id = misskey_id
+        self.name = name
+        self.category = category
+        self.tags = tags
+        self.url = url
+        self.is_self_made = is_self_made
+        self.license = license
+
+        self.owner_id = owner_id
+        self.risk_id = risk_id
+        self.info = info
+        self.deleted_at = deleted_at
+
+    def _build_json(self) -> dict:
+        return \
+            {
+                'id': self.id,
+                'misskey_id': self.misskey_id,
+                'name': self.name,
+                'category': self.category,
+                'tags': self.tags,
+                'url': self.url,
+                'is_self_made': self.is_self_made,
+                'license': self.license,
+                'owner_id': self.owner_id,
+                'risk_id': self.risk_id,
+                'info': self.info,
+                'deleted_at': self.deleted_at
+            }
+
 class _UserData(IWSMessage):
 
     def __init__(self, uid, misskey_id, username):
@@ -189,6 +223,28 @@ class EmojisDelete(IWSMessage):
                 'body': {
                     'ids': self.ids
                 }
+            }
+
+class DeletedEmojiUpdate(IWSMessage):
+    def __init__(self, eid, misskey_id, name, category, tags, url, is_self_made, license, owner_id, risk_id, info, deleted_at):
+        self.deleted = _DeletedEmojiData(eid, misskey_id, name, category, tags, url, is_self_made, license, owner_id, risk_id, info, deleted_at)
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'deleted_emoji_update',
+                'body': self.deleted._build_json()
+            }
+
+class DeletedEmojisUpdate(IWSMessage):
+    def __init__(self, emojis_data: list[_DeletedEmojiData]):
+        self.deleteds = emojis_data
+    
+    def _build_json(self) -> dict:
+        return \
+            {
+                'op': 'deleted_emojis_update',
+                'body': [e._build_json() for e in self.deleteds]
             }
 
 class RiskUpdate(IWSMessage):
