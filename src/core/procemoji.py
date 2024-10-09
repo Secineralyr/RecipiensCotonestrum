@@ -237,30 +237,31 @@ async def delete_emoji(data_emoji, ws_send=True):
             async with aiohttp.ClientSession() as session:
                 async with session.get(emoji_url) as res:
                     if res.status == 200:
-                        with Image.open(io.BytesIO(res.content)) as image:
-                            fi =  image.format
-                            if fi in ['JPEG', 'PNG', 'WebP']:
-                                image.thumbnail((128, 128))
-                                with io.BytesIO() as out:
-                                    image.save(out, format='PNG')
-                                    image_b64 = base64.b64encode(out.getvalue()).decode()
-                            elif fi == 'GIF':
-                                info = image.info
-                                loop = 0
-                                duration = 100
-                                if 'loop' in info:
-                                    loop = info['loop']
-                                if 'duration' in info:
-                                    duration = info['duration']
-                                frames = []
-                                for index in range(image.n_frames):
-                                    image.seek(index)
-                                    frames.append(image.copy().thumbnail((128, 128)))
-                                with io.BytesIO() as out:
-                                    frames[0].save(out, format='GIF', save_all=True, append_images=frames[1:], loop=loop, duration=duration)
-                                    image_b64 = base64.b64encode(out.getvalue()).decode()
-                            else:
-                                return
+                        data = await res.content.read()
+            with Image.open(io.BytesIO(data)) as image:
+                fi =  image.format
+                if fi in ['JPEG', 'PNG', 'WebP']:
+                    image.thumbnail((128, 128))
+                    with io.BytesIO() as out:
+                        image.save(out, format='PNG')
+                        image_b64 = base64.b64encode(out.getvalue()).decode()
+                elif fi == 'GIF':
+                    info = image.info
+                    loop = 0
+                    duration = 100
+                    if 'loop' in info:
+                        loop = info['loop']
+                    if 'duration' in info:
+                        duration = info['duration']
+                    frames = []
+                    for index in range(image.n_frames):
+                        image.seek(index)
+                        frames.append(image.copy().thumbnail((128, 128)))
+                    with io.BytesIO() as out:
+                        frames[0].save(out, format='GIF', save_all=True, append_images=frames[1:], loop=loop, duration=duration)
+                        image_b64 = base64.b64encode(out.getvalue()).decode()
+                else:
+                    return
         except Exception:
             import traceback
             traceback.print_exc()
