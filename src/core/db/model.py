@@ -26,8 +26,8 @@ class DeletedEmoji(Base):
     __tablename__ = 'deleted_emojis'
 
     id = Column(Text, primary_key=True)
-    misskey_id = Column(Text, unique=True)
-    name = Column(Text, unique=True)
+    misskey_id = Column(Text)
+    name = Column(Text)
     category = Column(Text)
     tags = Column(Text)
     is_self_made = Column(Integer, CheckConstraint('is_self_made == 0 OR is_self_made == 1'))
