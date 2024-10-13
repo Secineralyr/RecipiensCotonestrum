@@ -348,6 +348,11 @@ async def set_deleted_reason(eid, info, ws=None):
         emoji_image_backup = deleted.image_backup
         deleted_at = deleted.deleted_at
 
+        if emoji_tags == '':
+            ltags = []
+        else:
+            ltags = emoji_tags.split(' ')
+
         if deleted.info != info:
             before = deleted.info
             deleted.info = info
@@ -363,7 +368,7 @@ async def set_deleted_reason(eid, info, ws=None):
                 }
             })
 
-            msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, emoji_image_backup, emoji_is_self_made, emoji_license, uid, rid, info, deleted_at).build()
+            msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, ltags, emoji_url, emoji_image_backup, emoji_is_self_made, emoji_license, uid, rid, info, deleted_at).build()
             await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
 
 
