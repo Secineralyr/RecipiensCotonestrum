@@ -318,10 +318,15 @@ async def delete_emoji(data_emoji, ws_send=True):
         }
     })
 
+    if emoji_tags == '':
+        ltags = []
+    else:
+        ltags = emoji_tags.split(' ')
+
     if ws_send:
         msg = wsmsg.EmojiDelete(emoji_id).build()
         await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
-        msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, emoji_tags, emoji_url, image_b64, emoji_is_self_made, emoji_license, uid, rid, '', now).build()
+        msg = wsmsg.DeletedEmojiUpdate(emoji_id, emoji_mid, emoji_name, emoji_category, ltags, emoji_url, image_b64, emoji_is_self_made, emoji_license, uid, rid, '', now).build()
         await websocket.broadcast(msg, require=perm.Permission.EMOJI_MODERATOR)
         return
     else:
